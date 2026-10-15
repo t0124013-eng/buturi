@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>物理基礎 ラボ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=JetBrains+Mono:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+<style>
+/* 方眼ノートの上に実験台が並ぶレイアウト。紙＝方眼、インク＝紺、赤＝マークシートの赤、青＝力のベクトル、橙＝もう一つの量 */
+:root{
+  --paper:#F6F8FA; --grid:#E2E8EF; --card:#FFFFFF; --ink:#18212D; --muted:#5A6878; --line:#CDD6E0;
+  --red:#D3263B; --red-soft:#FBE3E6; --blue:#1F5FA6; --blue-soft:#DDE9F6; --orange:#D9711A; --orange-soft:#FBE9D6;
+  --green:#178A5C; --green-soft:#DAF1E6; --violet:#6A4BB0;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --f-num:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0F141A; --grid:#1A222C; --card:#161D26; --ink:#E5ECF3; --muted:#97A6B7; --line:#2C3846;
+  --red:#FF5B6E; --red-soft:#3A1C22; --blue:#6EA9EE; --blue-soft:#18283B; --orange:#F2A05A; --orange-soft:#3A2814;
+  --green:#4CC795; --green-soft:#132E24; --violet:#A994EE; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#0F141A; --grid:#1A222C; --card:#161D26; --ink:#E5ECF3; --muted:#97A6B7; --line:#2C3846;
+  --red:#FF5B6E; --red-soft:#3A1C22; --blue:#6EA9EE; --blue-soft:#18283B; --orange:#F2A05A; --orange-soft:#3A2814;
+  --green:#4CC795; --green-soft:#132E24; --violet:#A994EE; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.75;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.35;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:4px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--card);border-bottom:2px solid var(--ink)}
+.top-in{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:900;font-size:19px;letter-spacing:.02em;white-space:nowrap}
+.logo small{font-weight:700;font-size:11px;color:var(--muted);letter-spacing:.08em}
+.rank{margin-left:auto;display:flex;align-items:center;gap:10px;min-width:0}
+.rank-name{font-family:var(--f-display);font-weight:700;font-size:13px;border:1.5px solid var(--red);color:var(--red);border-radius:999px;padding:1px 10px;white-space:nowrap}
+.rank-rate{font-size:12px;color:var(--muted);white-space:nowrap}
+.rank-rate b{font-family:var(--f-num);font-size:17px;color:var(--ink)}
+.rank-bar{width:90px;height:6px;border-radius:3px;background:var(--grid);overflow:hidden}
+.rank-bar i{display:block;height:100%;background:var(--red);width:0;transition:width .6s}
+nav.tabs{max-width:1040px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs a{flex:none;text-decoration:none;color:var(--muted);font-weight:700;font-size:13.5px;padding:6px 12px 7px;border-bottom:3px solid transparent}
+nav.tabs a.on{color:var(--ink);border-bottom-color:var(--red)}
+nav.tabs a:hover{color:var(--ink)}
+
+main{max-width:1040px;margin:0 auto;padding-block:22px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.loading{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;font-size:14px}
+.foot{max-width:1040px;margin:0 auto;color:var(--muted);font-size:12px;padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.foot p{margin:4px 0}
+
+/* home */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:22px;align-items:center;margin-bottom:26px}
+.hero h1{font-size:clamp(30px,6vw,50px);font-weight:900;letter-spacing:.01em}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero .lead{color:var(--muted);margin:10px 0 0;max-width:34em}
+.hero-cv{background:var(--card);border:2px solid var(--ink);border-radius:var(--r);overflow:hidden;position:relative}
+.hero-cv .cap{position:absolute;left:10px;bottom:6px;font-size:11.5px;color:var(--muted);pointer-events:none}
+@media (max-width:720px){.hero{grid-template-columns:1fr}}
+.part{margin:28px 0 10px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.part h2{font-size:22px;font-weight:900}
+.part .tag{font-family:var(--f-num);font-size:12px;color:var(--card);background:var(--ink);padding:1px 8px;border-radius:4px;letter-spacing:.06em}
+.part p{margin:0;color:var(--muted);font-size:13.5px}
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.ucard{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:14px 14px 12px;transition:border-color .15s,transform .15s}
+.ucard:hover{border-color:var(--ink);transform:translateY(-2px)}
+.ucard .no{font-family:var(--f-num);font-size:12px;color:var(--red);font-weight:700}
+.ucard h3{font-size:17px;font-weight:900}
+.ucard ul{margin:0;padding:0;list-style:none;font-size:12.5px;color:var(--muted)}
+.ucard ul li::before{content:"▸ ";color:var(--blue)}
+.ucard .pg{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-top:auto;padding-top:6px}
+.ucard .pg .bar{flex:1;height:5px;background:var(--grid);border-radius:3px;overflow:hidden}
+.ucard .pg .bar i{display:block;height:100%;background:var(--green)}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
+.tool{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.tool:hover{border-color:var(--ink)}
+.tool b{font-family:var(--f-display);font-size:15.5px;display:block}
+.tool span{font-size:12px;color:var(--muted)}
+.tool .ic{flex:none;width:38px;height:38px;border-radius:8px;display:grid;place-items:center;font-family:var(--f-num);font-weight:700;font-size:15px;background:var(--blue-soft);color:var(--blue)}
+
+/* mascot */
+.say{display:flex;gap:10px;align-items:flex-start;margin:14px 0}
+.say svg{flex:none;width:52px;height:52px}
+.say .bubble{position:relative;background:var(--card);border:1.5px solid var(--ink);border-radius:12px;padding:9px 13px;font-size:14px;min-width:0}
+.say .bubble::before{content:"";position:absolute;left:-8px;top:16px;width:12px;height:12px;background:var(--card);border-left:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:rotate(45deg)}
+.say .bubble b.who{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em}
+
+/* unit page */
+.crumb{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.crumb a{color:var(--muted)}
+.uh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.uh .no{font-family:var(--f-num);color:var(--red);font-weight:700}
+.uh h1{font-size:clamp(24px,4.6vw,34px);font-weight:900}
+.sec-t{font-family:var(--f-display);font-weight:900;font-size:19px;margin:28px 0 10px;display:flex;align-items:center;gap:10px}
+.sec-t::after{content:"";flex:1;height:2px;background:var(--ink);opacity:.85}
+.points{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:6px 16px}
+.points .pt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:center}
+.points .pt:last-child{border-bottom:0}
+.points .pt p{margin:0;font-size:14.5px;min-width:0}
+.fx{font-family:var(--f-num);font-weight:700;background:var(--blue-soft);color:var(--blue);padding:2px 9px;border-radius:5px;white-space:nowrap;font-size:14px}
+@media (max-width:560px){.points .pt{grid-template-columns:1fr}.points .pt .fx{justify-self:start}}
+
+.lab{background:var(--card);border:2px solid var(--ink);border-radius:var(--r);margin:16px 0;overflow:hidden}
+.lab-h{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid var(--line);flex-wrap:wrap}
+.lab-h .lt{font-family:var(--f-num);font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--card);background:var(--red);padding:1px 8px;border-radius:4px}
+.lab-h h3{font-size:17px;font-weight:900}
+.lab-h .done{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.lab-h .done.on{color:var(--green);font-weight:700}
+.lab-b{padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.try{font-size:13.5px;background:var(--orange-soft);border-radius:8px;padding:7px 11px;margin:0}
+.try b{color:var(--orange)}
+.cv-wrap{position:relative;width:100%;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.cv-wrap canvas{display:block;width:100%;touch-action:none;cursor:default}
+.cv-wrap canvas.grab{cursor:grab}
+.cv-wrap canvas.grabbing{cursor:grabbing}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 18px;align-items:end}
+.sl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sl label{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700}
+.sl label .num{color:var(--blue);font-weight:700}
+.sl input[type=range]{width:100%;accent-color:var(--red);height:26px}
+.btns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.btn{border:1.5px solid var(--ink);background:var(--card);color:var(--ink);border-radius:7px;padding:5px 12px;font-weight:700;font-size:13.5px;cursor:pointer;line-height:1.4}
+.btn:hover{background:var(--grid)}
+.btn.pri{background:var(--ink);color:var(--card)}
+.btn.pri:hover{opacity:.88}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:7px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--card);padding:5px 11px;font-size:13px;font-weight:700;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--card)}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--red);width:16px;height:16px}
+.reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+.rd{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:4px 10px;min-width:0}
+.rd span{display:block;font-size:11px;color:var(--muted);letter-spacing:.03em}
+.rd b{font-family:var(--f-num);font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rd.hi{border-color:var(--red);background:var(--red-soft)}
+details.why{border-top:1px dashed var(--line);padding-top:8px}
+details.why summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--blue)}
+details.why .say{margin:8px 0 0}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+
+/* quiz */
+.qlist{display:flex;flex-direction:column;gap:12px}
+.q{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.q-h{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap}
+.q-h .lv{color:var(--orange);letter-spacing:1px}
+.q-h .st{margin-left:auto;font-weight:700}
+.q-h .st.ok{color:var(--green)} .q-h .st.ng{color:var(--red)}
+.q p.qt{margin:0 0 8px;font-size:15px}
+.chs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px}
+.ch{display:flex;gap:8px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:14.5px;line-height:1.5}
+.ch:hover{border-color:var(--ink)}
+.ch .mk{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--red);color:var(--red);display:grid;place-items:center;font-family:var(--f-num);font-size:12px;font-weight:700;margin-top:1px}
+.ch.sel .mk{background:var(--red);color:var(--card)}
+.ch.right{border-color:var(--green);background:var(--green-soft)}
+.ch.wrong{border-color:var(--red);background:var(--red-soft)}
+.ex{margin-top:8px;font-size:14px;border-left:3px solid var(--blue);padding:4px 0 4px 10px}
+.ex b{color:var(--blue)}
+.filters{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.filters .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.filters .row > span{font-size:12px;color:var(--muted);font-weight:700;width:52px}
+.chip{border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:2px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+.chip.on{border-color:var(--ink);background:var(--ink);color:var(--card)}
+.count{font-size:13px;color:var(--muted);margin:0 0 8px}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.fc{perspective:900px;height:150px;cursor:pointer;border:0;background:none;padding:0;text-align:left}
+.fc .in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.fc.flip .in{transform:rotateY(180deg)}
+.fc .fa,.fc .fb{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.fc .fa{background:var(--card);border:1.5px solid var(--ink)}
+.fc .fb{background:var(--ink);color:var(--card);transform:rotateY(180deg)}
+.fc .fa small,.fc .fb small{font-size:11px;letter-spacing:.06em;opacity:.7}
+.fc .fa b{font-family:var(--f-display);font-size:18px;margin-top:auto;margin-bottom:auto}
+.fc .fb .f{font-family:var(--f-num);font-size:19px;font-weight:700;color:var(--card)}
+.fc .fb p{margin:0;font-size:12.5px;line-height:1.55}
+@media (prefers-reduced-motion:reduce){.fc .in{transition:none}}
+
+/* glossary */
+.gsearch{width:100%;border:1.5px solid var(--ink);border-radius:8px;padding:8px 12px;background:var(--card);font-size:15px;margin-bottom:12px}
+.gl-k{font-family:var(--f-display);font-weight:900;font-size:16px;margin:16px 0 6px;color:var(--red)}
+.gl dl{margin:0;display:grid;grid-template-columns:minmax(8em,max-content) minmax(0,1fr);gap:0;background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);overflow:hidden}
+.gl dt,.gl dd{margin:0;padding:8px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.gl dt{font-weight:700}
+.gl dt small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.gl dd a{font-size:12px}
+@media (max-width:520px){.gl dl{grid-template-columns:1fr}.gl dt{border-bottom:0;padding-bottom:0}}
+
+.guide{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:8px 18px 14px}
+.guide h3{font-size:16px;margin:14px 0 4px}
+.guide p,.guide li{font-size:14.5px;max-width:42em}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap}
+.pager a{flex:1 1 220px;text-decoration:none;color:var(--ink);border:1.5px solid var(--ink);border-radius:var(--r);padding:10px 14px;background:var(--card)}
+.pager a small{display:block;color:var(--muted);font-size:11.5px}
+.pager a.nx{text-align:right}
+.modal{position:fixed;inset:0;background:rgba(10,15,20,.45);display:grid;place-items:center;z-index:50;padding:16px}
+.modal .box{background:var(--card);border:2px solid var(--ink);border-radius:12px;max-width:380px;width:100%;padding:18px;display:flex;flex-direction:column;gap:10px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:8px 16px;border-radius:999px;font-weight:700;font-size:13.5px;z-index:60;box-shadow:0 6px 18px rgba(0,0,0,.2);max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="#home" data-go="home"><span>物理基礎 ラボ</span><small>力と運動・波</small></a>
+    <div class="rank" aria-live="polite">
+      <span class="rank-name" id="rankName">静止中</span>
+      <div class="rank-bar" aria-hidden="true"><i id="rankBar"></i></div>
+      <span class="rank-rate">達成率 <b id="rankRate">0</b>%</span>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <a href="#home" data-go="home">ホーム</a>
+    <a href="#motion" data-go="motion">力と運動</a>
+    <a href="#wave" data-go="wave">波</a>
+    <a href="#drill" data-go="drill">問題演習</a>
+    <a href="#cards" data-go="cards">公式カード</a>
+    <a href="#glossary" data-go="glossary">用語集</a>
+    <a href="#guide" data-go="guide">使い方</a>
+  </nav>
+</header>
+<main id="app">
+  <div class="loading"><b>読み込み中です…</b><br>この文章が表示されたまま変わらない場合は、プログラムが動いていません。ファイルをパソコンに保存してから Chrome や Edge で開いてください。Googleサイトに貼り付けた場合は、貼り付けたコードが最後（&lt;/html&gt;）まで入っているか確認してください。</div>
+</main>
+<footer class="foot">
+  <p>問題はすべてこの教材のためのオリジナル問題です。範囲は高等学校学習指導要領（平成30年告示）の「物理基礎」のうち「様々な運動（運動の表し方・様々な力とその働き・力学的エネルギー）」と「様々な物理現象とエネルギーの利用（波）」にそろえています。重力加速度は 9.8 m/s² で計算しています。</p>
+  <p>学習の記録はこの端末のブラウザにだけ保存されます。</p>
+</footer>
+
+<script>
+// ===== 共通ヘルパー =====
+const G = 9.8;
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(c));
+  return el;
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = (v, d = 1) => {
+  if (!isFinite(v)) return '—';
+  let s = v.toFixed(d); if (+s === 0) s = (0).toFixed(d);
+  return s.replace('-', '−');
+};
+
+// ---- テーマ色（canvas 用） ----
+const COL = {};
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['paper','grid','card','ink','muted','line','red','red-soft','blue','blue-soft','orange','orange-soft','green','green-soft','violet']
+    .forEach(k => COL[k.replace('-', '_')] = cs.getPropertyValue('--' + k).trim());
+}
+readColors();
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(readColors, 30)); } catch (e) {}
+try { new MutationObserver(() => setTimeout(readColors, 30)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] }); } catch (e) {}
+
+// ---- canvas ----
+function makeCanvas(parent, ratioFn, opts = {}) {
+  const wrap = h('div', { class: 'cv-wrap' });
+  const cv = h('canvas', { role: 'img', 'aria-label': opts.label || '実験の画面' });
+  if (opts.scrollable) cv.style.touchAction = 'pan-y';
+  wrap.append(cv); parent.append(wrap);
+  const o = { cv, wrap, ctx: cv.getContext('2d'), w: 300, h: 200 };
+  function fit() {
+    const w = wrap.clientWidth || 300;
+    const r = typeof ratioFn === 'function' ? ratioFn(w) : ratioFn;
+    const hh = Math.round(clamp(w * r, opts.minH || 160, opts.maxH || 520));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(hh * dpr);
+    cv.style.height = hh + 'px';
+    o.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    o.w = w; o.h = hh;
+    o.onresize && o.onresize();
+    o.draw && o.draw();
+  }
+  try { new ResizeObserver(fit).observe(wrap); } catch (e) { addEventListener('resize', fit); }
+  requestAnimationFrame(fit);
+  fit();
+  return o;
+}
+function ptr(cv, e) { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+// ドラッグ操作：hit(p) が対象を返したらドラッグ開始
+function draggable(o, { hit, move, down, up, hover }) {
+  const cv = o.cv; let target = null;
+  cv.addEventListener('pointerdown', e => {
+    const p = ptr(cv, e); const t = hit ? hit(p) : true;
+    if (t == null || t === false) return;
+    target = t; try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+    cv.classList.add('grabbing'); down && down(t, p); e.preventDefault();
+  });
+  cv.addEventListener('pointermove', e => {
+    const p = ptr(cv, e);
+    if (target != null) { move && move(target, p); e.preventDefault(); }
+    else if (hit) { const t = hit(p); cv.classList.toggle('grab', t != null && t !== false); hover && hover(t, p); }
+  });
+  const end = e => { if (target == null) return; const t = target; target = null; cv.classList.remove('grabbing'); up && up(t, ptr(cv, e)); };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+}
+// アニメーションループ（ページから外れたら止まる・画面外では休む）
+function loop(el, fn) {
+  let last = performance.now(), vis = true, alive = true;
+  try { new IntersectionObserver(es => { vis = es[0].isIntersecting; }).observe(el); } catch (e) {}
+  function f(now) {
+    if (!el.isConnected) { alive = false; return; }
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (vis) fn(dt, now / 1000);
+    requestAnimationFrame(f);
+  }
+  requestAnimationFrame(f);
+  return { get alive() { return alive; } };
+}
+const REDUCED = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+
+// ---- 操作パーツ ----
+function slider(parent, o, on) {
+  const id = 'sl-' + o.id;
+  const out = h('span', { class: 'num' });
+  const inp = h('input', { type: 'range', id, min: o.min, max: o.max, step: o.step, value: o.value });
+  const show = () => { out.textContent = (o.fmt ? o.fmt(+inp.value) : fmt(+inp.value, o.d ?? 1)) + (o.unit ? ' ' + o.unit : ''); };
+  inp.addEventListener('input', () => { show(); on && on(+inp.value); });
+  parent.append(h('div', { class: 'sl' }, h('label', { for: id }, h('span', null, o.label), out), inp));
+  show();
+  return { get v() { return +inp.value; }, set v(x) { inp.value = x; show(); }, el: inp };
+}
+function seg(parent, items, value, on) {
+  const box = h('div', { class: 'seg', role: 'group' });
+  const bs = items.map(([v, label]) => {
+    const b = h('button', { type: 'button', class: v === value ? 'on' : '', 'aria-pressed': v === value ? 'true' : 'false' }, label);
+    b.addEventListener('click', () => { set(v); on && on(v); });
+    box.append(b); return [v, b];
+  });
+  function set(v) { value = v; bs.forEach(([x, b]) => { b.classList.toggle('on', x === v); b.setAttribute('aria-pressed', x === v); }); }
+  parent.append(box);
+  return { get v() { return value; }, set };
+}
+function check(parent, id, label, val, on) {
+  const inp = h('input', { type: 'checkbox', id: 'ck-' + id });
+  inp.checked = !!val;
+  inp.addEventListener('change', () => on && on(inp.checked));
+  parent.append(h('label', { class: 'chk', for: 'ck-' + id }, inp, label));
+  return { get v() { return inp.checked; } };
+}
+function btn(parent, label, on, pri) {
+  const b = h('button', { type: 'button', class: 'btn' + (pri ? ' pri' : '') }, label);
+  b.addEventListener('click', on); parent.append(b); return b;
+}
+function reads(parent, items) {
+  const box = h('div', { class: 'reads' }); const map = {};
+  items.forEach(([k, label, hi]) => { const b = h('b', null, '—'); map[k] = b; box.append(h('div', { class: 'rd' + (hi ? ' hi' : '') }, h('span', null, label), b)); });
+  parent.append(box);
+  return vals => { for (const k in vals) if (map[k]) map[k].textContent = vals[k]; };
+}
+
+// ---- 描画ヘルパー ----
+function arrow(ctx, x1, y1, x2, y2, color, w = 2.5, head = 9) {
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy);
+  if (L < 1) return;
+  const ux = dx / L, uy = dy / L, hd = Math.min(head, L * 0.6);
+  ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - ux * hd * 0.7, y2 - uy * hd * 0.7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - ux * hd - uy * hd * 0.5, y2 - uy * hd + ux * hd * 0.5);
+  ctx.lineTo(x2 - ux * hd + uy * hd * 0.5, y2 - uy * hd - ux * hd * 0.5);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function txt(ctx, s, x, y, o = {}) {
+  ctx.save();
+  ctx.font = `${o.bold ? '700 ' : ''}${o.size || 12}px ${o.mono ? '"JetBrains Mono",monospace' : '"BIZ UDPGothic","Hiragino Sans",sans-serif'}`;
+  ctx.fillStyle = o.color || COL.ink; ctx.textAlign = o.align || 'left'; ctx.textBaseline = o.base || 'middle';
+  if (o.bg) { const m = ctx.measureText(s); const w = m.width + 8, hh = (o.size || 12) + 6;
+    let bx = x - (o.align === 'center' ? w / 2 : o.align === 'right' ? w - 4 : 4);
+    ctx.fillStyle = o.bg; ctx.fillRect(bx, y - hh / 2, w, hh); ctx.fillStyle = o.color || COL.ink; }
+  ctx.fillText(s, x, y); ctx.restore();
+}
+function line(ctx, pts, color, w = 2, dash) {
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+function dot(ctx, x, y, r, fill, stroke) {
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+}
+function niceStep(range, n = 5) {
+  const raw = range / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+  return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p;
+}
+// グラフ枠
+function axes(ctx, box, xr, yr, o = {}) {
+  const { x, y, w, h: hh } = box;
+  const X = v => x + (v - xr[0]) / (xr[1] - xr[0]) * w;
+  const Y = v => y + hh - (v - yr[0]) / (yr[1] - yr[0]) * hh;
+  ctx.save();
+  ctx.fillStyle = COL.card; ctx.fillRect(x, y, w, hh);
+  ctx.strokeStyle = COL.grid; ctx.lineWidth = 1;
+  const xs = o.xstep || niceStep(xr[1] - xr[0]), ys = o.ystep || niceStep(yr[1] - yr[0], 4);
+  for (let v = Math.ceil(xr[0] / xs) * xs; v <= xr[1] + 1e-9; v += xs) { ctx.beginPath(); ctx.moveTo(X(v), y); ctx.lineTo(X(v), y + hh); ctx.stroke();
+    txt(ctx, fmt(v, xs < 1 ? 1 : 0), X(v), y + hh + 9, { size: 10, color: COL.muted, align: 'center', mono: true }); }
+  for (let v = Math.ceil(yr[0] / ys) * ys; v <= yr[1] + 1e-9; v += ys) { ctx.beginPath(); ctx.moveTo(x, Y(v)); ctx.lineTo(x + w, Y(v)); ctx.stroke();
+    txt(ctx, fmt(v, ys < 1 ? 1 : 0), x - 4, Y(v), { size: 10, color: COL.muted, align: 'right', mono: true }); }
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.5;
+  if (yr[0] <= 0 && yr[1] >= 0) { ctx.beginPath(); ctx.moveTo(x, Y(0)); ctx.lineTo(x + w, Y(0)); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(X(Math.max(xr[0], 0)), y); ctx.lineTo(X(Math.max(xr[0], 0)), y + hh); ctx.stroke();
+  if (o.xl) txt(ctx, o.xl, x + w, y + hh + 22, { size: 11, color: COL.muted, align: 'right' });
+  if (o.yl) txt(ctx, o.yl, x + 4, y - 8, { size: 11, color: COL.muted, bold: true });
+  ctx.restore();
+  return { X, Y };
+}
+
+// ---- 音（Web Audio） ----
+let AC = null;
+function audio() { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; } catch (e) { return null; } }
+function tone(freqs, dur = 1.6, type = 'sine') {
+  const ac = audio(); if (!ac) { toast('この端末では音を鳴らせません'); return; }
+  const t0 = ac.currentTime + 0.02, g = ac.createGain();
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.18 / freqs.length, t0 + 0.04);
+  g.gain.setValueAtTime(0.18 / freqs.length, t0 + dur - 0.25); g.gain.linearRampToValueAtTime(0, t0 + dur);
+  g.connect(ac.destination);
+  freqs.forEach(f => { const o = ac.createOscillator(); o.type = type; o.frequency.value = f; o.connect(g); o.start(t0); o.stop(t0 + dur + 0.05); });
+}
+
+// ---- マスコット「ハコ博士」 ----
+function hakoSVG() {
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">
+  <rect x="9" y="14" width="46" height="42" rx="6" fill="var(--blue-soft)" stroke="var(--ink)" stroke-width="2.5"/>
+  <path d="M9 24h46" stroke="var(--ink)" stroke-width="2" opacity=".35"/>
+  <circle cx="24" cy="35" r="6.5" fill="var(--card)" stroke="var(--ink)" stroke-width="2.2"/>
+  <circle cx="40" cy="35" r="6.5" fill="var(--card)" stroke="var(--ink)" stroke-width="2.2"/>
+  <path d="M30.5 35h3" stroke="var(--ink)" stroke-width="2.2"/>
+  <circle cx="25" cy="35.5" r="2.2" fill="var(--ink)"/><circle cx="41" cy="35.5" r="2.2" fill="var(--ink)"/>
+  <path d="M27 47q5 4 10 0" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M32 14V5" stroke="var(--red)" stroke-width="2.5"/><path d="M32 3l-4 6h8z" fill="var(--red)"/>
+  </svg>`;
+}
+function say(html, who = 'ハコ博士') {
+  return h('div', { class: 'say' }, h('span', { html: hakoSVG() }), h('div', { class: 'bubble' }, h('b', { class: 'who' }, who), h('span', { html })));
+}
+let toastT = 0;
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = h('div', { class: 'toast', role: 'status' }, msg); document.body.append(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400);
+}
+
+// ===== 単元データ =====
+const PARTS = {
+  motion: { name: '力と運動', tag: 'PART 1', lead: '物体の動きを数式とグラフで表し、力との関係、エネルギーの見方までつなげます。' },
+  wave: { name: '波', tag: 'PART 2', lead: '波の表し方から、反射・重ね合わせ、そして音（弦・気柱・うなり）まで。' }
+};
+const UNITS = [
+  { id: 'u1', part: 'motion', no: '1', title: '速度と加速度', labs: ['car', 'vtdraw'],
+    say: '物体の動きは「位置」「速度」「加速度」の3つで表せるぞ。まずは台車を走らせて、グラフの形を目に焼きつけるのじゃ。',
+    points: [
+      ['速度は「単位時間あたりの変位」。向きをもつ量で、右向きを正とすると左向きは負になる。', 'v = Δx / Δt'],
+      ['加速度は「単位時間あたりの速度の変化」。速度が毎秒どれだけ変わるか。', 'a = Δv / Δt'],
+      ['等加速度直線運動①：t 秒後の速度。', 'v = v₀ + at'],
+      ['等加速度直線運動②：t 秒間の変位。v-t グラフの面積に等しい。', 'x = v₀t + ½at²'],
+      ['等加速度直線運動③：時間 t が分からないときに便利。', 'v² − v₀² = 2ax'],
+      ['x-t グラフの傾き＝速度、v-t グラフの傾き＝加速度。', '傾き と 面積']
+    ] },
+  { id: 'u2', part: 'motion', no: '2', title: '落体の運動', labs: ['throw'],
+    say: '空気抵抗を考えなければ、落ちる物体はみな同じ加速度 g ＝ 9.8 m/s² で加速する。投げたボールは「水平」と「鉛直」に分けて考えるのがコツじゃ。',
+    points: [
+      ['自由落下：初速度 0 で落とす。下向きを正にすると、加速度 g の等加速度運動。', 'v = gt,  y = ½gt²'],
+      ['鉛直投げ上げ：上向きを正にすると加速度は −g。最高点で速度は 0。', 'v = v₀ − gt'],
+      ['水平投射：水平方向は等速直線運動、鉛直方向は自由落下。', 'x = v₀t,  y = ½gt²'],
+      ['斜方投射：初速度を水平成分 v₀cosθ と鉛直成分 v₀sinθ に分けて考える。', 'vₓ = v₀cosθ'],
+      ['最高点でも速度の水平成分は残る（0 になるのは鉛直成分だけ）。', 'v_y = 0']
+    ] },
+  { id: 'u3', part: 'motion', no: '3', title: '力のつりあい', labs: ['forces', 'slope'],
+    say: '力は大きさと向きをもつベクトルじゃ。矢印をたすときは平行四辺形。成分に分けてしまえば、あとはたし算・ひき算で済む。',
+    points: [
+      ['質量 m の物体にはたらく重力の大きさ（重さ）。', 'W = mg'],
+      ['ばねの弾性力は伸び（縮み）に比例する（フックの法則）。', 'F = kx'],
+      ['力のつりあい：物体が静止しているとき、合力は 0。成分ごとにつりあう。', 'Fₓ = 0, F_y = 0'],
+      ['斜面上の重力は、斜面に平行な成分と垂直な成分に分解できる。', 'mg sinθ, mg cosθ'],
+      ['作用・反作用：2つの物体が及ぼし合う力は、同じ大きさで逆向き。はたらく物体が「別々」なので、つりあいとは別物。', 'F_AB = −F_BA']
+    ] },
+  { id: 'u4', part: 'motion', no: '4', title: '運動の法則と摩擦', labs: ['inertia', 'friction', 'elevator'],
+    say: '物体は、力がはたらかなければ今の動きを続けようとする。これが慣性じゃ。力がはたらくと加速度が生まれる。これが運動方程式 ma ＝ F じゃ。摩擦力は「止まっているとき」と「すべっているとき」で別人格になるから気をつけるのじゃ。',
+    points: [
+      ['慣性の法則：合力が 0 なら、静止している物体は静止し続け、動いている物体は等速直線運動を続ける。', '合力 = 0'],
+      ['運動方程式：加速度は合力に比例し、質量に反比例する。1 N は 1 kg の物体に 1 m/s² の加速度を生じる力。', 'ma = F'],
+      ['静止摩擦力は、物体が動き出さないように外力とつりあう。上限が最大摩擦力。', 'F₀ = μN'],
+      ['すべっている物体には、運動と逆向きに一定の動摩擦力がはたらく。', "F′ = μ′N"],
+      ['加速するエレベーターの床が人を押す力（体重計の表示）。上向き加速度を正とする。', 'N = m(g + a)']
+    ] },
+  { id: 'u5', part: 'motion', no: '5', title: '力学的エネルギー', labs: ['coaster', 'spring'],
+    say: 'エネルギーは「仕事をする能力」。形を変えても、摩擦がなければ合計は変わらない。ジェットコースターで確かめてみよう。',
+    points: [
+      ['仕事：力の向きに動いた距離との積。力と移動の向きが θ をなすときは cosθ をかける。', 'W = Fx cosθ'],
+      ['仕事率：単位時間あたりの仕事。単位はワット [W] ＝ [J/s]。', 'P = W / t'],
+      ['運動エネルギー。物体がされた仕事の分だけ変化する。', 'K = ½mv²'],
+      ['重力による位置エネルギー（基準からの高さ h）とばねの弾性エネルギー。', 'U = mgh,  ½kx²'],
+      ['重力・弾性力だけが仕事をするとき、力学的エネルギーは保存される。摩擦があると一部が熱になる。', 'K + U = 一定']
+    ] },
+  { id: 'u6', part: 'wave', no: '6', title: '波の性質', labs: ['wavemake'],
+    say: '波は「振動が伝わる現象」。媒質そのものは運ばれず、その場で振動しているだけ、というのがポイントじゃ。',
+    points: [
+      ['媒質の振動方向と進行方向が垂直なのが横波、平行なのが縦波（疎密波）。', '横波・縦波'],
+      ['1回の振動にかかる時間が周期 T、1秒間の振動回数が振動数 f。', 'f = 1 / T'],
+      ['1周期の間に波は1波長進む。', 'v = fλ = λ / T'],
+      ['縦波は、進行方向の変位を90°回して横波のように描ける（右向きの変位→上向き）。', 'y-x グラフ'],
+      ['y-x グラフは「ある時刻の波の形」、y-t グラフは「ある場所の媒質の振動」。', 'y-x と y-t']
+    ] },
+  { id: 'u7', part: 'wave', no: '7', title: '重ね合わせと反射', labs: ['rope', 'standing'],
+    say: '2つの波が出会うと、変位はたし算される。すれちがったあとは何事もなかったように進んでいく。反射は「はし」の性質で決まるぞ。',
+    points: [
+      ['重ね合わせの原理：合成波の変位は、それぞれの波の変位の和。', 'y = y₁ + y₂'],
+      ['波の独立性：重なり合ったあとも、それぞれの波はもとの形のまま進む。', '独立性'],
+      ['固定端反射：山は谷になってはね返る（位相が π ずれる）。', '山 → 谷'],
+      ['自由端反射：山は山のままはね返る。', '山 → 山'],
+      ['定常波：節と節の間隔は半波長。腹の振幅はもとの波の2倍。', '節の間隔 = λ/2']
+    ] },
+  { id: 'u8', part: 'wave', no: '8', title: '音と振動', labs: ['string', 'pipe', 'beat'],
+    say: '楽器の音は、弦や管の中にできる定常波から生まれる。実際に音を鳴らして、高さの変化を耳で確かめるのじゃ。',
+    points: [
+      ['空気中の音速は気温 t［℃］で変わる。', 'V = 331.5 + 0.6t'],
+      ['弦の固有振動：両はしが節。n は 1, 2, 3, …', 'f = nv / 2L'],
+      ['閉管：閉じたはしが節、開いたはしが腹。n は奇数（1, 3, 5, …）のみ。', 'f = nV / 4L'],
+      ['開管：両はしが腹。n は 1, 2, 3, …', 'f = nV / 2L'],
+      ['うなり：振動数が少しちがう2つの音を重ねたときの強弱。1秒あたりの回数。', 'f = |f₁ − f₂|'],
+      ['共振（共鳴）：外からの振動の振動数が固有振動数と一致すると大きく振動する。', '共振']
+    ] }
+];
+
+// ===== 確認問題（オリジナル） =====
+const QS = [
+  // u1
+  { id: 'q101', u: 'u1', lv: 1, q: '静止していた物体が、一定の加速度 2.0 m/s² で動き始めた。4.0 s 後の速さはいくらか。', ch: ['2.0 m/s', '4.0 m/s', '8.0 m/s', '16 m/s'], a: 2, ex: 'v ＝ v₀ ＋ at ＝ 0 ＋ 2.0 × 4.0 ＝ 8.0 m/s。' },
+  { id: 'q102', u: 'u1', lv: 1, q: '時速 72 km は、秒速何 m か。', ch: ['7.2 m/s', '20 m/s', '72 m/s', '260 m/s'], a: 1, ex: '72 km/h ＝ 72000 m ÷ 3600 s ＝ 20 m/s。「÷3.6」と覚えておくと便利。' },
+  { id: 'q103', u: 'u1', lv: 1, q: 'v-t グラフの「傾き」と「t 軸との間の面積」が表す量の組み合わせとして正しいものはどれか。', ch: ['傾き：変位　面積：加速度', '傾き：加速度　面積：変位', '傾き：速度　面積：時間', '傾き：加速度　面積：速度'], a: 1, ex: '傾き ＝ Δv/Δt ＝ 加速度、面積 ＝ v × t の積み重ね ＝ 変位。実験「v-t グラフを描いて走らせる」で確かめよう。' },
+  { id: 'q104', u: 'u1', lv: 2, q: '速さ 10 m/s で走っていた自転車が一定の加速度でブレーキをかけ、5.0 s 後に止まった。加速度はいくらか（進む向きを正とする）。', ch: ['+2.0 m/s²', '−2.0 m/s²', '−0.50 m/s²', '+50 m/s²'], a: 1, ex: 'a ＝ (0 − 10) ÷ 5.0 ＝ −2.0 m/s²。減速しているので、加速度は進む向きと逆（負）。' },
+  { id: 'q105', u: 'u1', lv: 2, q: '前の問題の自転車が、ブレーキをかけてから止まるまでに進んだ距離はいくらか。', ch: ['25 m', '50 m', '12.5 m', '2.0 m'], a: 0, ex: 'v-t グラフは底辺 5.0 s・高さ 10 m/s の三角形。面積 ＝ ½ × 5.0 × 10 ＝ 25 m。v² − v₀² ＝ 2ax からも 0 − 100 ＝ 2 × (−2.0) × x より x ＝ 25 m。' },
+  { id: 'q106', u: 'u1', lv: 3, q: '初速度 4.0 m/s、加速度 −1.0 m/s² で動き出した物体が、出発点にもどってくるのは何 s 後か。', ch: ['4.0 s', '8.0 s', '16 s', '2.0 s'], a: 1, ex: 'x ＝ 4.0t − ½ × 1.0 × t² ＝ 0 より t(4.0 − 0.5t) ＝ 0、t ＝ 8.0 s。4.0 s 後にいったん止まり、引き返してくる。' },
+  // u2
+  { id: 'q201', u: 'u2', lv: 1, q: '物体を静かにはなして自由落下させた。2.0 s 後の速さはいくらか。', ch: ['9.8 m/s', '19.6 m/s', '4.9 m/s', '39.2 m/s'], a: 1, ex: 'v ＝ gt ＝ 9.8 × 2.0 ＝ 19.6 m/s。' },
+  { id: 'q202', u: 'u2', lv: 1, q: '自由落下する物体が、はなしてから 3.0 s 間に落ちる距離はいくらか。', ch: ['29.4 m', '44.1 m', '88.2 m', '14.7 m'], a: 1, ex: 'y ＝ ½gt² ＝ ½ × 9.8 × 3.0² ＝ 44.1 m。' },
+  { id: 'q203', u: 'u2', lv: 2, q: '小球を初速度 19.6 m/s で真上に投げ上げた。最高点の高さは投げた位置から何 m か。', ch: ['39.2 m', '9.8 m', '19.6 m', '2.0 m'], a: 2, ex: '最高点では v ＝ 0。v² − v₀² ＝ −2gy より 0 − 19.6² ＝ −2 × 9.8 × y、y ＝ 19.6 m。最高点までの時間は 2.0 s。' },
+  { id: 'q204', u: 'u2', lv: 1, q: '同じ高さから、小球Aを水平に投げ出すと同時に、小球Bを静かにはなした。先に地面に着くのはどちらか（空気抵抗は無視）。', ch: ['A', 'B', '同時', '投げる速さによって変わる'], a: 2, ex: '鉛直方向の動きはどちらも初速度 0 の自由落下で同じ。水平方向の速さは落ちる時間に影響しない。実験の「同時に自由落下するボール」で確かめよう。' },
+  { id: 'q205', u: 'u2', lv: 2, q: '高さ 4.9 m の台の上から、小球を水平に 5.0 m/s で投げ出した。着地点は台の真下から水平に何 m はなれているか。', ch: ['2.5 m', '4.9 m', '5.0 m', '10 m'], a: 2, ex: '落ちる時間：4.9 ＝ ½ × 9.8 × t² より t ＝ 1.0 s。水平距離 ＝ 5.0 × 1.0 ＝ 5.0 m。' },
+  { id: 'q206', u: 'u2', lv: 2, q: '斜め上に投げた小球が最高点にあるとき、小球の速度について正しいものはどれか。', ch: ['速度は 0 である', '鉛直成分だけが残っている', '水平成分だけが残っている', '投げたときと同じ速度である'], a: 2, ex: '水平方向は等速なので水平成分はずっと v₀cosθ のまま。最高点で 0 になるのは鉛直成分だけ。' },
+  { id: 'q207', u: 'u2', lv: 3, q: '水平な地面から、初速度 20 m/s、水平から 30° 上向きに小球を投げた。最高点の高さはおよそ何 m か。', ch: ['5.1 m', '10 m', '20 m', '2.6 m'], a: 0, ex: '鉛直成分 v₀sin30° ＝ 10 m/s。最高点の高さ ＝ 10² ÷ (2 × 9.8) ≒ 5.1 m。' },
+  // u3
+  { id: 'q301', u: 'u3', lv: 1, q: '質量 2.0 kg の物体にはたらく重力の大きさはいくらか。', ch: ['2.0 N', '9.8 N', '19.6 N', '4.9 N'], a: 2, ex: 'W ＝ mg ＝ 2.0 × 9.8 ＝ 19.6 N。' },
+  { id: 'q302', u: 'u3', lv: 1, q: '1点に、東向きに 3.0 N、北向きに 4.0 N の力がはたらいている。合力の大きさはいくらか。', ch: ['1.0 N', '5.0 N', '7.0 N', '12 N'], a: 1, ex: '直角に交わる2力の合力は、三平方の定理で √(3.0² ＋ 4.0²) ＝ 5.0 N。実験のボタン「直角に 3 N と 4 N」で見られる。' },
+  { id: 'q303', u: 'u3', lv: 1, q: 'ばね定数 50 N/m のばねを 0.10 m 伸ばすのに必要な力の大きさはいくらか。', ch: ['0.20 N', '5.0 N', '50 N', '500 N'], a: 1, ex: 'フックの法則 F ＝ kx ＝ 50 × 0.10 ＝ 5.0 N。' },
+  { id: 'q304', u: 'u3', lv: 2, q: '傾きの角 30° のなめらかな斜面上に質量 m の物体を置く。重力の「斜面に平行な成分」の大きさはどれか。', ch: ['mg', 'mg/2', '√3mg/2', '2mg'], a: 1, ex: '斜面に平行な成分は mg sin30° ＝ mg/2。垂直な成分が mg cos30° ＝ √3mg/2。' },
+  { id: 'q305', u: 'u3', lv: 2, q: '机の上に本が静止している。「本にはたらく重力」とつりあっている力はどれか。', ch: ['本が机を押す力', '机が本を押す力（垂直抗力）', '本が地球を引く力', '地球が机を引く力'], a: 1, ex: 'つりあいは「同じ物体（本）にはたらく」力どうし。本にはたらく力は重力と垂直抗力の2つ。' },
+  { id: 'q306', u: 'u3', lv: 2, q: '「地球が本を引く力（本にはたらく重力）」の反作用はどれか。', ch: ['机が本を押す力', '本が机を押す力', '本が地球を引く力', '机が地球を押す力'], a: 2, ex: '作用・反作用は「AがBに及ぼす力」と「BがAに及ぼす力」の組。地球→本 の反作用は 本→地球。' },
+  { id: 'q307', u: 'u3', lv: 3, q: '質量 2.0 kg のおもりを軽い糸でつるし、水平方向に力を加えて、糸が鉛直から 45° 傾いた状態で静止させた。水平に加えた力の大きさはいくらか。', ch: ['9.8 N', '19.6 N', '27.7 N', '13.9 N'], a: 1, ex: '糸の張力を T とすると、鉛直：T cos45° ＝ mg、水平：T sin45° ＝ F。2式から F ＝ mg tan45° ＝ 19.6 N。' },
+  // u4
+  { id: 'q401', u: 'u4', lv: 1, q: '質量 2.0 kg の物体に、合力 6.0 N がはたらいた。加速度の大きさはいくらか。', ch: ['0.33 m/s²', '3.0 m/s²', '12 m/s²', '8.0 m/s²'], a: 1, ex: 'ma ＝ F より a ＝ 6.0 ÷ 2.0 ＝ 3.0 m/s²。' },
+  { id: 'q402', u: 'u4', lv: 1, q: '水平な床の上に静止している物体を 10 N の力で水平に押したが、動かなかった。このとき物体にはたらく静止摩擦力の大きさはいくらか。', ch: ['0 N', '10 N', '最大摩擦力に等しい', '10 N より大きい'], a: 1, ex: '静止しているので、押す力と静止摩擦力はつりあっている。静止摩擦力は「必要な分だけ」はたらく（上限が最大摩擦力）。' },
+  { id: 'q403', u: 'u4', lv: 2, q: '水平な床の上の質量 5.0 kg の物体。床との静止摩擦係数が 0.40 のとき、最大摩擦力はいくらか。', ch: ['2.0 N', '12.5 N', '19.6 N', '49 N'], a: 2, ex: '垂直抗力 N ＝ mg ＝ 49 N。最大摩擦力 ＝ μN ＝ 0.40 × 49 ＝ 19.6 N。' },
+  { id: 'q404', u: 'u4', lv: 3, q: '質量 2.0 kg の物体を、動摩擦係数 0.20 の水平な床の上で、水平に 10 N の力で引き続けた。物体の加速度の大きさはおよそいくらか。', ch: ['5.0 m/s²', '3.0 m/s²', '2.0 m/s²', '1.0 m/s²'], a: 1, ex: '動摩擦力 ＝ 0.20 × 2.0 × 9.8 ≒ 3.9 N。運動方程式 2.0a ＝ 10 − 3.9 より a ≒ 3.0 m/s²。' },
+  { id: 'q405', u: 'u4', lv: 2, q: '上向きに 2.0 m/s² の加速度で動き出したエレベーターの中で、質量 50 kg の人が床から受ける垂直抗力の大きさはいくらか。', ch: ['390 N', '490 N', '590 N', '100 N'], a: 2, ex: '上向きを正として ma ＝ N − mg より N ＝ m(g ＋ a) ＝ 50 × (9.8 ＋ 2.0) ＝ 590 N。体重計は約 60 kg を示す。' },
+  { id: 'q406', u: 'u4', lv: 1, q: '宇宙空間で、力をまったく受けずに動いている物体の運動として正しいものはどれか。', ch: ['だんだん遅くなって止まる', '等速直線運動を続ける', 'だんだん速くなる', '円運動をする'], a: 1, ex: '慣性の法則。合力が 0 なら速度は変わらない。地上で物体が止まるのは摩擦や空気抵抗がはたらくから。' },
+  { id: 'q408', u: 'u4', lv: 1, q: 'まっすぐ走っている電車が急ブレーキをかけると、なめらかな床の上のボールが前へ転がり出した。その理由として正しいものはどれか。', ch: ['ボールに前向きの力がはたらいたから', 'ボールがそれまでの速度で進み続けようとしたから', '重力が前向きにはたらいたから', '空気がボールを前に押したから'], a: 1, ex: 'ボールには前向きの力ははたらいていない。慣性によってボールは同じ速度で進み続け、電車のほうが遅くなったので、電車の中からは前に転がり出したように見える。実験「電車の中のボール」で確かめよう。' },
+  { id: 'q409', u: 'u4', lv: 2, q: '一定の速さでまっすぐ走る電車の中で、ボールを真上に投げ上げた。ボールはどこに落ちるか（空気の影響は無視）。', ch: ['投げた人の手元', '投げた人より後ろ', '投げた人より前', '電車の速さによって変わる'], a: 0, ex: 'ボールは投げる前から電車と同じ水平の速度をもっていて、空中でもその速度を保つ（慣性）。電車も同じ速度で進むので、ボールは手元にもどってくる。' },
+  { id: 'q410', u: 'u4', lv: 1, q: '摩擦のない水平な氷の上を、物体が 3.0 m/s ですべっている。水平方向には力がはたらいていない。5.0 s 後の速さはいくらか。', ch: ['0 m/s', '3.0 m/s', '15 m/s', '0.60 m/s'], a: 1, ex: '合力が 0 なので、慣性の法則により等速直線運動を続ける。速さは 3.0 m/s のまま。' },
+  { id: 'q407', u: 'u4', lv: 2, q: '静止している質量 4.0 kg の物体に、一定の合力 8.0 N を加え続けた。3.0 s 後の速さはいくらか。', ch: ['2.0 m/s', '6.0 m/s', '12 m/s', '24 m/s'], a: 1, ex: 'a ＝ 8.0 ÷ 4.0 ＝ 2.0 m/s²、v ＝ at ＝ 2.0 × 3.0 ＝ 6.0 m/s。' },
+  // u5
+  { id: 'q501', u: 'u5', lv: 1, q: '物体に 10 N の力を加え、力の向きに 3.0 m 動かした。力がした仕事はいくらか。', ch: ['3.3 J', '13 J', '30 J', '300 J'], a: 2, ex: 'W ＝ Fx ＝ 10 × 3.0 ＝ 30 J。' },
+  { id: 'q502', u: 'u5', lv: 1, q: '質量 2.0 kg の物体が速さ 3.0 m/s で動いている。運動エネルギーはいくらか。', ch: ['3.0 J', '6.0 J', '9.0 J', '18 J'], a: 2, ex: 'K ＝ ½mv² ＝ ½ × 2.0 × 3.0² ＝ 9.0 J。' },
+  { id: 'q503', u: 'u5', lv: 2, q: '高さ 5.0 m の所から物体を静かにはなした。地面に達する直前の速さはおよそいくらか（空気抵抗は無視）。', ch: ['7.0 m/s', '9.9 m/s', '49 m/s', '98 m/s'], a: 1, ex: 'mgh ＝ ½mv² より v ＝ √(2gh) ＝ √(2 × 9.8 × 5.0) ＝ √98 ≒ 9.9 m/s。質量に関係しない。' },
+  { id: 'q504', u: 'u5', lv: 1, q: 'ばね定数 100 N/m のばねを 0.20 m 縮めた。ばねにたくわえられた弾性エネルギーはいくらか。', ch: ['2.0 J', '4.0 J', '10 J', '20 J'], a: 0, ex: 'U ＝ ½kx² ＝ ½ × 100 × 0.20² ＝ 2.0 J。' },
+  { id: 'q505', u: 'u5', lv: 1, q: '摩擦のある面の上を物体がすべるとき、力学的エネルギーはどうなるか。', ch: ['増える', '変わらない', '減って、その分が熱などになる', '0 になる'], a: 2, ex: '動摩擦力は負の仕事をして、力学的エネルギーを熱に変える。エネルギー全体としては保存されている。' },
+  { id: 'q506', u: 'u5', lv: 1, q: '600 J の仕事を 30 s で行った。仕事率はいくらか。', ch: ['0.05 W', '20 W', '570 W', '18000 W'], a: 1, ex: 'P ＝ W/t ＝ 600 ÷ 30 ＝ 20 W。' },
+  { id: 'q507', u: 'u5', lv: 3, q: '高さ 2.0 m の所から、なめらかな曲面を静かにすべり下りた物体の、最下点（高さ 0）での速さはおよそいくらか。', ch: ['4.4 m/s', '6.3 m/s', '20 m/s', '39 m/s'], a: 1, ex: '曲面の形に関係なく、力学的エネルギー保存より v ＝ √(2gh) ＝ √(39.2) ≒ 6.3 m/s。ジェットコースターの実験と同じ考え方。' },
+  { id: 'q508', u: 'u5', lv: 3, q: '速さ 4.0 m/s で水平な床をすべっていた質量 3.0 kg の物体が、摩擦によって止まった。この間に動摩擦力がした仕事はいくらか。', ch: ['+24 J', '−24 J', '−12 J', '0 J'], a: 1, ex: '運動エネルギーの変化 ＝ された仕事。0 − ½ × 3.0 × 4.0² ＝ −24 J。動摩擦力は運動と逆向きなので負の仕事。' },
+  // u6
+  { id: 'q601', u: 'u6', lv: 1, q: '振動数 5.0 Hz、波長 0.40 m の波の速さはいくらか。', ch: ['0.080 m/s', '2.0 m/s', '5.4 m/s', '12.5 m/s'], a: 1, ex: 'v ＝ fλ ＝ 5.0 × 0.40 ＝ 2.0 m/s。' },
+  { id: 'q602', u: 'u6', lv: 1, q: '周期 0.25 s の波の振動数はいくらか。', ch: ['0.25 Hz', '2.5 Hz', '4.0 Hz', '25 Hz'], a: 2, ex: 'f ＝ 1/T ＝ 1 ÷ 0.25 ＝ 4.0 Hz。' },
+  { id: 'q603', u: 'u6', lv: 1, q: '縦波の例として正しいものはどれか。', ch: ['空気中を伝わる音波', '弦を伝わる波', '水面を伝わる波（波紋）', 'ロープを上下にふって伝わる波'], a: 0, ex: '音波は空気が進行方向に押し縮められたり引きのばされたりして伝わる縦波（疎密波）。' },
+  { id: 'q604', u: 'u6', lv: 1, q: '波が伝わるとき、媒質の各点はどうなっているか。', ch: ['波といっしょに進んでいく', 'その場で振動するだけで、移動していかない', '波と逆向きに進む', 'まったく動かない'], a: 1, ex: '伝わっていくのは「振動の状態（エネルギー）」で、媒質は運ばれない。実験の赤い粒を見よう。' },
+  { id: 'q605', u: 'u6', lv: 2, q: '音速 340 m/s の空気中で、振動数 680 Hz の音の波長はいくらか。', ch: ['0.50 m', '2.0 m', '1020 m', '231200 m'], a: 0, ex: 'λ ＝ v/f ＝ 340 ÷ 680 ＝ 0.50 m。' },
+  { id: 'q606', u: 'u6', lv: 2, q: 'ある場所の媒質の振動を時間を横軸にして表したグラフはどれか。', ch: ['y-x グラフ', 'y-t グラフ', 'x-t グラフ', 'v-t グラフ'], a: 1, ex: '「ある場所」の時間変化なので y-t グラフ。山と山の間隔は波長ではなく周期 T になる。' },
+  // u7
+  { id: 'q701', u: 'u7', lv: 1, q: '固定端に山の形のパルスが入射した。反射波はどうなるか。', ch: ['山のまま反射する', '谷になって反射する', '反射しない', '振幅が2倍になって反射する'], a: 1, ex: '固定端では反射波の位相が π ずれ、山は谷になってもどってくる。ロープの実験で「固定端」にして確かめよう。' },
+  { id: 'q702', u: 'u7', lv: 1, q: '自由端に山の形のパルスが入射した。反射波はどうなるか。', ch: ['山のまま反射する', '谷になって反射する', '反射しない', '波長が半分になって反射する'], a: 0, ex: '自由端では位相はずれず、山は山のまま反射する。' },
+  { id: 'q703', u: 'u7', lv: 1, q: '高さ 2 cm の山のパルスと、深さ 3 cm の谷のパルスが完全に重なった瞬間、その点の変位はいくらか（上向きを正）。', ch: ['+5 cm', '+1 cm', '−1 cm', '−5 cm'], a: 2, ex: '重ね合わせの原理より (+2) ＋ (−3) ＝ −1 cm。' },
+  { id: 'q704', u: 'u7', lv: 1, q: '定常波で、隣り合う節と節の間隔は波長 λ の何倍か。', ch: ['λ/4', 'λ/2', 'λ', '2λ'], a: 1, ex: '節と節（腹と腹）の間隔は λ/2。節と隣の腹の間隔は λ/4。' },
+  { id: 'q705', u: 'u7', lv: 2, q: '振幅 A の2つの波が逆向きに進んで定常波ができた。腹の振幅はいくらか。', ch: ['A/2', 'A', '2A', '4A'], a: 2, ex: '腹では2つの波がいつも強め合うので、振幅は 2A。定常波の実験で確かめよう。' },
+  { id: 'q706', u: 'u7', lv: 2, q: '波長 0.60 m の定常波で、節から隣の腹までの距離はいくらか。', ch: ['0.15 m', '0.30 m', '0.60 m', '1.2 m'], a: 0, ex: '節と隣の腹の間隔は λ/4 ＝ 0.60 ÷ 4 ＝ 0.15 m。' },
+  // u8
+  { id: 'q801', u: 'u8', lv: 1, q: '長さ 0.50 m の弦が基本振動しているとき、弦を伝わる波の波長はいくらか。', ch: ['0.25 m', '0.50 m', '1.0 m', '2.0 m'], a: 2, ex: '基本振動では弦の長さが半波長分。λ ＝ 2L ＝ 1.0 m。' },
+  { id: 'q802', u: 'u8', lv: 2, q: '長さ 0.50 m の弦を伝わる波の速さが 200 m/s のとき、3倍振動の振動数はいくらか。', ch: ['200 Hz', '300 Hz', '600 Hz', '1200 Hz'], a: 2, ex: '基本振動数 f₁ ＝ v/(2L) ＝ 200 Hz。3倍振動は 3 × 200 ＝ 600 Hz。' },
+  { id: 'q803', u: 'u8', lv: 2, q: '長さ 0.17 m の閉管の基本振動数はいくらか（音速 340 m/s、開口端補正は無視）。', ch: ['250 Hz', '500 Hz', '1000 Hz', '2000 Hz'], a: 1, ex: '閉管の基本振動は L ＝ λ/4。λ ＝ 0.68 m、f ＝ 340 ÷ 0.68 ＝ 500 Hz。' },
+  { id: 'q804', u: 'u8', lv: 2, q: '長さ 0.50 m の開管の基本振動数はいくらか（音速 340 m/s、開口端補正は無視）。', ch: ['170 Hz', '340 Hz', '680 Hz', '1360 Hz'], a: 1, ex: '開管の基本振動は L ＝ λ/2。λ ＝ 1.0 m、f ＝ 340 ÷ 1.0 ＝ 340 Hz。' },
+  { id: 'q805', u: 'u8', lv: 1, q: '440 Hz と 443 Hz のおんさを同時に鳴らした。1秒あたりのうなりの回数は何回か。', ch: ['3 回', '441.5 回', '883 回', '0 回'], a: 0, ex: 'うなりの回数 ＝ |f₁ − f₂| ＝ |440 − 443| ＝ 3 回/s。' },
+  { id: 'q806', u: 'u8', lv: 1, q: '気温 15 ℃ の空気中の音速はおよそいくらか。', ch: ['331 m/s', '341 m/s', '346 m/s', '9.0 m/s'], a: 1, ex: 'V ＝ 331.5 ＋ 0.6 × 15 ＝ 340.5 ≒ 341 m/s。' },
+  { id: 'q807', u: 'u8', lv: 2, q: '閉管の中にできない振動はどれか。', ch: ['基本振動', '2倍振動', '3倍振動', '5倍振動'], a: 1, ex: '閉管では閉じたはしが節・開いたはしが腹なので、L ＝ (奇数) × λ/4。偶数倍の振動はできない。' },
+  { id: 'q808', u: 'u8', lv: 3, q: 'ある閉管の基本振動数が 200 Hz だった。同じ長さの開管にすると、基本振動数はいくらになるか（開口端補正は無視）。', ch: ['100 Hz', '200 Hz', '400 Hz', '600 Hz'], a: 2, ex: '閉管 f ＝ V/(4L)、開管 f ＝ V/(2L)。同じ L なら開管の基本振動数は2倍で 400 Hz。' }
+];
+
+// ===== 公式カード =====
+const CARDS = [
+  ['motion', '平均の速度', 'v = Δx / Δt', '変位を時間でわる。向きをもつ量。'],
+  ['motion', '加速度', 'a = Δv / Δt', '速度の変化を時間でわる。単位は m/s²。'],
+  ['motion', '等加速度直線運動①', 'v = v₀ + at', 't 秒後の速度。'],
+  ['motion', '等加速度直線運動②', 'x = v₀t + ½at²', 't 秒間の変位。v-t グラフの台形の面積。'],
+  ['motion', '等加速度直線運動③', 'v² − v₀² = 2ax', '時間 t が分からないときに使う。'],
+  ['motion', '自由落下', 'v = gt,  y = ½gt²', '下向きを正。g = 9.8 m/s²。'],
+  ['motion', '鉛直投げ上げ', 'v = v₀ − gt,  y = v₀t − ½gt²', '上向きを正。最高点で v = 0。'],
+  ['motion', '水平投射', 'x = v₀t,  y = ½gt²', '水平は等速、鉛直は自由落下。'],
+  ['motion', '重力', 'W = mg', '質量 m [kg] の物体の重さ [N]。'],
+  ['motion', 'フックの法則', 'F = kx', 'ばねの弾性力は伸び（縮み）に比例。'],
+  ['motion', '最大摩擦力', 'F₀ = μN', 'μ：静止摩擦係数、N：垂直抗力。'],
+  ['motion', '動摩擦力', "F′ = μ′N", 'μ′：動摩擦係数。ふつう μ′ < μ。'],
+  ['motion', '慣性の法則', '合力 = 0 → v = 一定', '静止しているものは静止し続け、動いているものは等速直線運動を続ける。'],
+  ['motion', '運動方程式', 'ma = F', 'F は合力。1 N = 1 kg·m/s²。'],
+  ['motion', '仕事', 'W = Fx cosθ', '単位は J（ジュール）。力と移動が垂直なら 0。'],
+  ['motion', '仕事率', 'P = W / t', '単位は W（ワット）= J/s。'],
+  ['motion', '運動エネルギー', 'K = ½mv²', '速さの2乗に比例。'],
+  ['motion', '重力による位置エネルギー', 'U = mgh', 'h は基準面からの高さ。'],
+  ['motion', '弾性エネルギー', 'U = ½kx²', 'ばねの伸び（縮み）x の2乗に比例。'],
+  ['motion', '力学的エネルギー保存', '½mv² + mgh = 一定', '重力・弾性力だけが仕事をするとき。'],
+  ['wave', '周期と振動数', 'f = 1 / T', '単位は Hz（ヘルツ）= 1/s。'],
+  ['wave', '波の基本式', 'v = fλ', '1周期で1波長進む。'],
+  ['wave', '重ね合わせの原理', 'y = y₁ + y₂', '重なった所の変位はたし算。'],
+  ['wave', '定常波', '節の間隔 = λ/2', '節と隣の腹は λ/4。腹の振幅は 2A。'],
+  ['wave', '音速', 'V = 331.5 + 0.6t', 't は気温 [℃]。'],
+  ['wave', '弦の固有振動', 'f = nv / 2L', 'n = 1, 2, 3, …　両はしが節。'],
+  ['wave', '閉管', 'f = nV / 4L', 'n = 1, 3, 5, …（奇数）'],
+  ['wave', '開管', 'f = nV / 2L', 'n = 1, 2, 3, …　両はしが腹。'],
+  ['wave', 'うなり', 'f = |f₁ − f₂|', '1秒あたりのうなりの回数。']
+];
+
+// ===== 用語集 [語, よみ, 説明, 単元] =====
+const GLOSS = [
+  ['変位', 'へんい', '位置の変化。向きと大きさをもつ。', 'u1'], ['速度', 'そくど', '単位時間あたりの変位。向きをもつ。', 'u1'], ['速さ', 'はやさ', '速度の大きさ。向きはもたない。', 'u1'],
+  ['加速度', 'かそくど', '単位時間あたりの速度の変化。単位は m/s²。', 'u1'], ['等速直線運動', 'とうそくちょくせんうんどう', '一定の速度で一直線上を進む運動。加速度は 0。', 'u1'],
+  ['等加速度直線運動', 'とうかそくどちょくせんうんどう', '加速度が一定の直線運動。v-t グラフは直線。', 'u1'], ['相対速度', 'そうたいそくど', '動いている観測者から見た相手の速度。v相対 = v相手 − v自分。', 'u1'],
+  ['合成速度', 'ごうせいそくど', '2つの速度を合わせた速度。川を進む船の速度など。', 'u1'], ['x-t グラフ', 'えっくすてぃーぐらふ', '位置と時間の関係のグラフ。傾きが速度。', 'u1'], ['v-t グラフ', 'ぶいてぃーぐらふ', '速度と時間の関係のグラフ。傾きが加速度、面積が変位。', 'u1'],
+  ['自由落下', 'じゆうらっか', '初速度 0 で、重力だけを受けて落下する運動。', 'u2'], ['重力加速度', 'じゅうりょくかそくど', '重力だけを受けて運動する物体の加速度。g ≒ 9.8 m/s²。', 'u2'],
+  ['鉛直投げ上げ', 'えんちょくなげあげ', '真上に投げた物体の運動。加速度は下向きに g。', 'u2'], ['水平投射', 'すいへいとうしゃ', '水平に投げ出された物体の運動。', 'u2'], ['斜方投射', 'しゃほうとうしゃ', '斜め上に投げ出された物体の運動。軌道は放物線。', 'u2'],
+  ['力', 'ちから', '物体の運動状態を変えたり、変形させたりする原因。単位は N（ニュートン）。', 'u3'], ['合力', 'ごうりょく', '複数の力を合わせて1つにしたもの。', 'u3'], ['分力', 'ぶんりょく', '1つの力を2つ以上の方向に分けたもの。', 'u3'],
+  ['力のつりあい', 'ちからのつりあい', '物体にはたらく力の合力が 0 の状態。', 'u3'], ['作用・反作用の法則', 'さようはんさようのほうそく', '物体Aが物体Bに力を及ぼすと、BもAに同じ大きさで逆向きの力を及ぼす（運動の第3法則）。', 'u3'],
+  ['重力', 'じゅうりょく', '地球が物体を引く力。大きさは mg。', 'u3'], ['垂直抗力', 'すいちょくこうりょく', '面が物体を垂直に押し返す力。', 'u3'], ['張力', 'ちょうりょく', '糸やひもが物体を引く力。', 'u3'],
+  ['弾性力', 'だんせいりょく', '変形した物体がもとにもどろうとする力。', 'u3'], ['フックの法則', 'ふっくのほうそく', 'ばねの弾性力は伸び（縮み）に比例する。F = kx。', 'u3'], ['ばね定数', 'ばねていすう', 'ばねの硬さを表す量。単位は N/m。', 'u3'],
+  ['静止摩擦力', 'せいしまさつりょく', '静止している物体が面から受ける、動き出しをさまたげる力。', 'u4'], ['最大摩擦力', 'さいだいまさつりょく', '静止摩擦力の最大値。μN。', 'u4'], ['静止摩擦係数', 'せいしまさつけいすう', '最大摩擦力と垂直抗力の比 μ。', 'u4'],
+  ['動摩擦力', 'どうまさつりょく', 'すべっている物体が面から受ける、運動と逆向きの力。μ′N。', 'u4'], ['動摩擦係数', 'どうまさつけいすう', '動摩擦力と垂直抗力の比 μ′。', 'u4'],
+  ['慣性', 'かんせい', '物体がそれまでの運動状態を続けようとする性質。', 'u4'], ['慣性の法則', 'かんせいのほうそく', '合力が 0 なら、静止または等速直線運動を続ける（運動の第1法則）。', 'u4'],
+  ['運動方程式', 'うんどうほうていしき', 'ma = F。加速度は合力に比例し、質量に反比例する（運動の第2法則）。', 'u4'], ['質量', 'しつりょう', '物体の動かしにくさ（慣性の大きさ）を表す量。単位は kg。', 'u4'],
+  ['空気抵抗', 'くうきていこう', '空気中を動く物体が受ける、運動をさまたげる力。速いほど大きい。', 'u4'],
+  ['仕事', 'しごと', '力 × 力の向きに動いた距離。単位は J（ジュール）。', 'u5'], ['仕事率', 'しごとりつ', '単位時間あたりの仕事。単位は W（ワット）。', 'u5'],
+  ['運動エネルギー', 'うんどうえねるぎー', '運動している物体がもつエネルギー。½mv²。', 'u5'], ['位置エネルギー', 'いちえねるぎー', '基準の位置から移動したことで物体がもつエネルギー。重力では mgh。', 'u5'],
+  ['弾性エネルギー', 'だんせいえねるぎー', '変形したばねなどがもつエネルギー。½kx²。', 'u5'], ['力学的エネルギー', 'りきがくてきえねるぎー', '運動エネルギーと位置エネルギーの和。', 'u5'],
+  ['力学的エネルギー保存の法則', 'りきがくてきえねるぎーほぞんのほうそく', '保存力（重力・弾性力）だけが仕事をするとき、力学的エネルギーは一定。', 'u5'], ['保存力', 'ほぞんりょく', '仕事が途中の道すじによらない力。重力・弾性力など。', 'u5'],
+  ['波', 'なみ', 'ある場所に生じた振動が、次々と周りに伝わっていく現象。', 'u6'], ['媒質', 'ばいしつ', '波を伝える物質。ロープ、水、空気など。', 'u6'], ['波源', 'はげん', '波を発生させるもと。', 'u6'],
+  ['横波', 'よこなみ', '媒質の振動方向が、波の進行方向と垂直な波。', 'u6'], ['縦波', 'たてなみ', '媒質の振動方向が、波の進行方向と平行な波。疎密波ともいう。', 'u6'],
+  ['疎密波', 'そみつは', '縦波のこと。媒質の密な部分と疎な部分が交互に伝わる。', 'u6'], ['振幅', 'しんぷく', '振動の中心から山の高さ（谷の深さ）まで。', 'u6'],
+  ['波長', 'はちょう', '隣り合う山と山（谷と谷）の距離。λ（ラムダ）。', 'u6'], ['周期', 'しゅうき', '媒質が1回振動するのにかかる時間。T。', 'u6'], ['振動数', 'しんどうすう', '1秒間に振動する回数。f。単位は Hz。', 'u6'],
+  ['位相', 'いそう', '振動のどの段階にあるかを表す量。', 'u6'],
+  ['重ね合わせの原理', 'かさねあわせのげんり', '2つの波が重なった所の変位は、それぞれの変位の和になる。', 'u7'], ['合成波', 'ごうせいは', '2つ以上の波が重なってできる波。', 'u7'],
+  ['波の独立性', 'なみのどくりつせい', '波は重なり合ったあとも、もとの形のまま進んでいく性質。', 'u7'], ['定常波', 'ていじょうは', '同じ波が逆向きに進んで重なったときにできる、進まない波。定在波ともいう。', 'u7'],
+  ['進行波', 'しんこうは', '進んでいく波。定常波に対していう。', 'u7'], ['節', 'ふし', '定常波で、まったく振動しない点。', 'u7'], ['腹', 'はら', '定常波で、最も大きく振動する点。', 'u7'],
+  ['固定端反射', 'こていたんはんしゃ', '媒質のはしが固定されている場合の反射。山は谷になってもどる。', 'u7'], ['自由端反射', 'じゆうたんはんしゃ', '媒質のはしが自由に動ける場合の反射。山は山のままもどる。', 'u7'],
+  ['音波', 'おんぱ', '空気などの媒質を伝わる縦波。', 'u8'], ['音速', 'おんそく', '音の伝わる速さ。空気中で約 340 m/s（気温で変わる）。', 'u8'],
+  ['音の三要素', 'おとのさんようそ', '音の高さ（振動数）・大きさ（振幅）・音色（波形）。', 'u8'], ['超音波', 'ちょうおんぱ', '人が聞こえる範囲（約 20〜20000 Hz）より振動数の大きい音。', 'u8'],
+  ['うなり', 'うなり', '振動数が少しちがう2つの音が重なって生じる、音の強弱のくり返し。', 'u8'], ['固有振動', 'こゆうしんどう', '物体が自然に振動するときの振動。その振動数が固有振動数。', 'u8'],
+  ['基本振動', 'きほんしんどう', '固有振動のうち、振動数が最も小さいもの。', 'u8'], ['倍振動', 'ばいしんどう', '基本振動数の整数倍の振動数をもつ固有振動。', 'u8'],
+  ['共振', 'きょうしん', '外から加える振動の振動数が固有振動数に一致して、大きく振動する現象。', 'u8'], ['共鳴', 'きょうめい', '音における共振。気柱やおんさが大きく鳴る現象。', 'u8'],
+  ['閉管', 'へいかん', '一方のはしが閉じた管。閉じたはしが節になる。', 'u8'], ['開管', 'かいかん', '両はしが開いた管。両はしが腹になる。', 'u8'],
+  ['開口端補正', 'かいこうたんほせい', '気柱の腹の位置が管口より少し外側にずれること。そのずれの長さ。', 'u8'], ['弦', 'げん', '両はしを固定して張った糸。両はしが節になる。', 'u8']
+];
+
+// ===== ランク =====
+const RANKS = [[0, '静止中'], [10, '動き出し'], [25, '等速直線運動'], [40, '加速中'], [55, '放物運動'], [70, '共振中'], [85, '定常波マスター'], [100, 'ニュートン級']];
+
+// ===== 実験：力と運動 =====
+const LABS = {};
+
+// ---------- 1-A 台車を走らせる（等加速度直線運動） ----------
+LABS.car = {
+  title: '台車を走らせる',
+  tryText: '初速度と加速度を決めて「走らせる」。上の道路には<b>1秒ごとの位置</b>が残ります。間隔の変化と、2つのグラフの形を見比べよう。',
+  why: '1秒ごとの印の間隔が広がっていくのは、速度が毎秒 a ずつ増えているから。v-t グラフは<b>傾き＝加速度</b>の直線になり、色をぬった<b>面積が変位 x</b>になります。加速度をマイナスにすると、いったん止まって引き返す様子も見られます。',
+  build(b, touch) {
+    const st = { v0: 4, a: 1, t: 0, run: false, T: 8 };
+    const o = makeCanvas(b, w => w < 560 ? 1.25 : 0.5, { maxH: 560, label: '台車の位置と x-t・v-t グラフ' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    slider(c, { id: 'car-v0', label: '初速度 v₀', min: -4, max: 8, step: 0.5, value: 4, unit: 'm/s' }, v => { st.v0 = v; reset(); touch(); });
+    slider(c, { id: 'car-a', label: '加速度 a', min: -2, max: 2, step: 0.25, value: 1, unit: 'm/s²', d: 2 }, v => { st.a = v; reset(); touch(); });
+    const bb = h('div', { class: 'btns' }); c.append(bb);
+    const pb = btn(bb, '▶ 走らせる', () => { if (st.t >= st.T) st.t = 0; st.run = !st.run; pb.textContent = st.run ? '⏸ 止める' : '▶ 走らせる'; touch(); }, true);
+    btn(bb, '↺ 最初から', () => reset());
+    const up = reads(b, [['t', '時刻 t'], ['v', '速度 v'], ['x', '変位 x', true]]);
+    let rng;
+    const X = t => st.v0 * t + 0.5 * st.a * t * t, V = t => st.v0 + st.a * t;
+    function nice(a, b) { const s = niceStep((b - a) || 1, 4); return [Math.floor(a / s + 1e-9) * s, Math.ceil(b / s - 1e-9) * s]; }
+    function calc() {
+      let xs = [], vs = [];
+      for (let i = 0; i <= 80; i++) { const t = i / 10; xs.push(X(t)); vs.push(V(t)); }
+      rng = { x: nice(Math.min(0, ...xs), Math.max(1, ...xs)), v: nice(Math.min(0, ...vs), Math.max(1, ...vs)) };
+    }
+    function reset() { st.t = 0; st.run = false; pb.textContent = '▶ 走らせる'; calc(); o.draw(); }
+    calc();
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const t = st.t;
+      // 道路
+      const rx0 = 30, rx1 = w - 30, ry = 62;
+      const RX = x => rx0 + (x - rng.x[0]) / (rng.x[1] - rng.x[0]) * (rx1 - rx0);
+      ctx.fillStyle = COL.card; ctx.fillRect(0, 0, w, 92);
+      line(ctx, [[rx0, ry], [rx1, ry]], COL.ink, 2);
+      const sx = niceStep(rng.x[1] - rng.x[0], 6);
+      for (let v = rng.x[0]; v <= rng.x[1] + 1e-9; v += sx) { line(ctx, [[RX(v), ry], [RX(v), ry + 5]], COL.muted, 1); txt(ctx, fmt(v, 0), RX(v), ry + 14, { size: 10, color: COL.muted, align: 'center', mono: true }); }
+      txt(ctx, 'x [m]', rx1, ry + 26, { size: 10, color: COL.muted, align: 'right' });
+      if (rng.x[0] < 0) { line(ctx, [[RX(0), ry - 30], [RX(0), ry]], COL.red, 1.5, [3, 3]); txt(ctx, '出発点', RX(0) + 4, ry - 36, { size: 10, color: COL.red }); }
+      for (let k = 1; k <= Math.floor(t + 1e-9); k++) {
+        const px = RX(X(k)); line(ctx, [[px, ry - 22], [px, ry]], COL.blue, 1.5);
+        txt(ctx, k + 's', px, ry - 28, { size: 9.5, color: COL.blue, align: 'center', mono: true });
+      }
+      const cx = RX(X(t));
+      ctx.fillStyle = COL.red; ctx.fillRect(cx - 15, ry - 19, 30, 13);
+      dot(ctx, cx - 9, ry - 4, 4, COL.ink); dot(ctx, cx + 9, ry - 4, 4, COL.ink);
+      const vv = V(t); if (Math.abs(vv) > 0.05) { arrow(ctx, cx, ry - 32 - 8, cx + vv * 6, ry - 40, COL.orange, 2.5, 8); }
+      // グラフ
+      const wide = w >= 560, top = 112, gh = wide ? H - top - 34 : (H - top - 70) / 2;
+      const gw = wide ? (w - 120) / 2 : w - 64;
+      const b1 = { x: 46, y: top, w: gw, h: gh }, b2 = wide ? { x: 46 + gw + 52, y: top, w: gw, h: gh } : { x: 46, y: top + gh + 48, w: gw, h: gh };
+      const A1 = axes(ctx, b1, [0, 8], rng.x, { xl: 't [s]', yl: 'x [m]  x-tグラフ', xstep: 1 });
+      const A2 = axes(ctx, b2, [0, 8], rng.v, { xl: 't [s]', yl: 'v [m/s]  v-tグラフ', xstep: 1 });
+      // v-t 面積
+      ctx.save(); ctx.globalAlpha = 0.28;
+      const n = Math.max(2, Math.round(t * 40));
+      for (let i = 0; i < n; i++) { const ta = t * i / n, tb = t * (i + 1) / n, vm = V((ta + tb) / 2);
+        ctx.fillStyle = vm >= 0 ? COL.blue : COL.orange; const y0 = A2.Y(0), y1 = A2.Y(vm);
+        ctx.fillRect(A2.X(ta), Math.min(y0, y1), A2.X(tb) - A2.X(ta) + 0.5, Math.abs(y1 - y0)); }
+      ctx.restore();
+      const full = (F, A) => { const p = []; for (let i = 0; i <= 80; i++) p.push([A.X(i / 10), A.Y(F(i / 10))]); return p; };
+      const part = (F, A) => { const p = []; const m = Math.max(1, Math.round(t * 10)); for (let i = 0; i <= m; i++) { const tt = t * i / m; p.push([A.X(tt), A.Y(F(tt))]); } return p; };
+      line(ctx, full(X, A1), COL.muted, 1, [4, 4]); line(ctx, full(V, A2), COL.muted, 1, [4, 4]);
+      line(ctx, part(X, A1), COL.blue, 2.5); line(ctx, part(V, A2), COL.red, 2.5);
+      dot(ctx, A1.X(t), A1.Y(X(t)), 4.5, COL.blue); dot(ctx, A2.X(t), A2.Y(V(t)), 4.5, COL.red);
+      if (t > 0.6) txt(ctx, '面積 ＝ 変位', A2.X(t / 2), A2.Y(V(t / 2) / 2), { size: 11, bold: true, align: 'center', color: COL.ink, bg: COL.card });
+      up({ t: fmt(t, 1) + ' s', v: fmt(vv, 1) + ' m/s', x: fmt(X(t), 1) + ' m' });
+    };
+    loop(b, dt => { if (!st.run) return; st.t += dt; if (st.t >= st.T) { st.t = st.T; st.run = false; pb.textContent = '▶ もう一度'; } o.draw(); });
+  }
+};
+
+// ---------- 1-B v-t グラフを描いて走らせる ----------
+LABS.vtdraw = {
+  title: 'v-t グラフを描いて走らせる',
+  tryText: 'グラフの<b>●を上下にドラッグ</b>して v-t グラフを描き、「走らせる」で台車を動かそう。<b>変位が 0 m</b>になる（出発点に戻る）グラフは作れるかな？',
+  why: '線の<b>傾き</b>がその区間の加速度。グラフと t 軸の間の<b>面積</b>がその区間の変位で、t 軸より下（v &lt; 0）の部分は左向きの変位になります。上下の面積が等しいと、変位は 0（出発点にもどる）。移動距離は向きを考えない面積の合計です。',
+  build(b, touch) {
+    const T = [0, 2, 4, 6, 8, 10]; const V = [0, 3, 3, 0, -2, 0];
+    let tt = 10, run = false, vr = [-5, 5];
+    const o = makeCanvas(b, w => w < 560 ? 0.95 : 0.58, { maxH: 540, label: 'v-tグラフと台車' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    const bb = h('div', { class: 'btns' }); c.append(bb);
+    const pb = btn(bb, '▶ 走らせる', () => { if (!run) { if (tt >= 10) tt = 0; run = true; pb.textContent = '⏸ 止める'; } else { run = false; pb.textContent = '▶ 走らせる'; } touch(); }, true);
+    btn(bb, '全部 0 にする', () => { V.fill(0); tt = 10; run = false; pb.textContent = '▶ 走らせる'; o.draw(); });
+    btn(bb, '例：行って戻る', () => { V.splice(0, 6, 0, 4, 0, -4, 0, 0); tt = 10; run = false; pb.textContent = '▶ 走らせる'; o.draw(); touch(); });
+    const up = reads(b, [['t', '時刻 t'], ['v', '速度 v'], ['x', '変位（いまの位置）', true], ['d', '移動距離']]);
+    const vAt = t => { const i = clamp(Math.floor(t / 2), 0, 4); const f = (t - T[i]) / 2; return V[i] + (V[i + 1] - V[i]) * f; };
+    function xAt(t) { let x = 0; for (let i = 0; i < 5; i++) { const a = T[i], bnd = Math.min(T[i + 1], t); if (bnd <= a) break; x += (vAt(a) + vAt(bnd)) / 2 * (bnd - a); } return x; }
+    function distAt(t) { let d = 0; const n = 400; for (let i = 0; i < n; i++) { const ta = t * i / n, tb = t * (i + 1) / n; d += Math.abs(vAt((ta + tb) / 2)) * (tb - ta); } return d; }
+    let A, box;
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const gh = H * 0.62 - 30; box = { x: 46, y: 22, w: w - 66, h: gh };
+      A = axes(ctx, box, [0, 10], vr, { xl: 't [s]', yl: 'v [m/s]', xstep: 1, ystep: 1 });
+      ctx.save(); ctx.globalAlpha = 0.28;
+      const px = Math.ceil(A.X(tt) - A.X(0));
+      for (let i = 0; i < px; i++) { const t = (i + 0.5) / px * tt, v = vAt(t); ctx.fillStyle = v >= 0 ? COL.blue : COL.orange; const y0 = A.Y(0), y1 = A.Y(v); ctx.fillRect(A.X(0) + i, Math.min(y0, y1), 1.2, Math.abs(y1 - y0)); }
+      ctx.restore();
+      line(ctx, T.map((t, i) => [A.X(t), A.Y(V[i])]), COL.red, 2.5);
+      for (let i = 0; i < 5; i++) { const a = (V[i + 1] - V[i]) / 2; const mx = A.X(T[i] + 1), my = A.Y((V[i] + V[i + 1]) / 2) - 14;
+        txt(ctx, 'a=' + fmt(a, 1), mx, clamp(my, box.y + 8, box.y + box.h - 8), { size: 10, mono: true, color: COL.violet, align: 'center', bg: COL.card }); }
+      T.forEach((t, i) => { dot(ctx, A.X(t), A.Y(V[i]), 8, COL.card, COL.red); dot(ctx, A.X(t), A.Y(V[i]), 3.5, COL.red); });
+      if (tt < 10) line(ctx, [[A.X(tt), box.y], [A.X(tt), box.y + box.h]], COL.ink, 1, [3, 3]);
+      // 道路
+      let xs = []; for (let i = 0; i <= 100; i++) xs.push(xAt(i / 10));
+      const s = niceStep(Math.max(4, Math.max(...xs) - Math.min(...xs)), 5);
+      const xr = [Math.floor(Math.min(0, ...xs) / s) * s, Math.ceil(Math.max(1, ...xs) / s) * s];
+      const ry = H - 34, rx0 = 30, rx1 = w - 30, RX = x => rx0 + (x - xr[0]) / (xr[1] - xr[0]) * (rx1 - rx0);
+      line(ctx, [[rx0, ry], [rx1, ry]], COL.ink, 2);
+      for (let v = xr[0]; v <= xr[1] + 1e-9; v += s) { line(ctx, [[RX(v), ry], [RX(v), ry + 5]], COL.muted, 1); txt(ctx, fmt(v, 0), RX(v), ry + 14, { size: 10, color: COL.muted, align: 'center', mono: true }); }
+      line(ctx, [[RX(0), ry - 34], [RX(0), ry]], COL.red, 1.5, [3, 3]); txt(ctx, '出発点', RX(0) + 4, ry - 34, { size: 10, color: COL.red });
+      for (let k = 1; k <= Math.floor(tt + 1e-9); k++) { const p = RX(xAt(k)); line(ctx, [[p, ry - 20], [p, ry]], COL.blue, 1); }
+      const cx = RX(xAt(tt)); ctx.fillStyle = COL.red; ctx.fillRect(cx - 14, ry - 18, 28, 12); dot(ctx, cx - 8, ry - 4, 4, COL.ink); dot(ctx, cx + 8, ry - 4, 4, COL.ink);
+      const vv = vAt(Math.min(tt, 9.999)); if (Math.abs(vv) > 0.05) arrow(ctx, cx, ry - 28, cx + vv * 7, ry - 28, COL.orange, 2.5, 7);
+      up({ t: fmt(tt, 1) + ' s', v: fmt(vv, 1) + ' m/s', x: fmt(xAt(tt), 1) + ' m', d: fmt(distAt(tt), 1) + ' m' });
+    };
+    draggable(o, {
+      hit: p => { if (!A) return null; let best = null, bd = 18; T.forEach((t, i) => { const d = Math.hypot(p.x - A.X(t), p.y - A.Y(V[i])); if (d < bd) { bd = d; best = i; } }); return best; },
+      move: (i, p) => { const v = vr[0] + (box.y + box.h - p.y) / box.h * (vr[1] - vr[0]); V[i] = clamp(Math.round(v * 2) / 2, vr[0], vr[1]); run = false; tt = 10; pb.textContent = '▶ 走らせる'; touch(); o.draw(); }
+    });
+    loop(b, dt => { if (!run) return; tt += dt * 1.25; if (tt >= 10) { tt = 10; run = false; pb.textContent = '▶ もう一度'; } o.draw(); });
+  }
+};
+
+// ---------- 2 投射ランチャー ----------
+LABS.throw = {
+  title: 'ボールを投げる（落体の運動）',
+  tryText: 'ボールから出ている<b>矢印の先をドラッグ</b>して、投げる向きと速さを決めて「投げる」。<b>影</b>を表示すると、水平方向と鉛直方向の動きを別々に見られます。',
+  why: '0.2秒ごとの位置を見ると、<b>水平方向は等間隔（等速直線運動）</b>、<b>鉛直方向は間隔が変わる（加速度 g の等加速度運動）</b>。真横に投げたボールと、同時に落とした自由落下のボールは、<b>同じ時刻に同じ高さ</b>にあり、同時に着地します。最高点でも速度の水平成分は残っています。',
+  build(b, touch) {
+    const st = { h0: 6, vx: 10, vy: 10, t: 0, fly: false, slow: false, shadow: true, comp: false, drop: false };
+    const W = 46;
+    const o = makeCanvas(b, w => w < 560 ? 0.9 : 0.55, { maxH: 520, label: '投射のシミュレーション' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    slider(c, { id: 'th-h', label: '投げる高さ', min: 0, max: 15, step: 0.5, value: 6, unit: 'm' }, v => { st.h0 = v; reset(); touch(); });
+    const bb = h('div', { class: 'btns' }); c.append(bb);
+    const pb = btn(bb, '▶ 投げる', () => { reset(); st.fly = true; touch(); }, true);
+    btn(bb, '真横に 10 m/s', () => { st.vx = 10; st.vy = 0; reset(); touch(); });
+    btn(bb, '↺ 戻す', () => reset());
+    const ck = h('div', { class: 'btns' }); b.append(ck);
+    check(ck, 'th-sh', '影（水平・鉛直の動き）', true, v => { st.shadow = v; o.draw(); });
+    check(ck, 'th-cp', '速度の成分', false, v => { st.comp = v; o.draw(); });
+    check(ck, 'th-dr', '同時に自由落下するボール', false, v => { st.drop = v; reset(); });
+    check(ck, 'th-sl', 'スロー', false, v => { st.slow = v; });
+    const up = reads(b, [['v0', '初速 v₀'], ['th', '角度'], ['hm', '最高点の高さ'], ['T', '着地までの時間', true], ['R', '水平到達距離', true]]);
+    let s = 10, gy = 0, ox = 0;
+    const lx = 2.5;
+    const flightT = () => { const g = G; return (st.vy + Math.sqrt(st.vy * st.vy + 2 * g * st.h0)) / g; };
+    const pos = t => ({ x: lx + st.vx * t, y: st.h0 + st.vy * t - 0.5 * G * t * t });
+    const PX = x => ox + x * s, PY = y => gy - y * s;
+    function reset() { st.t = 0; st.fly = false; o.draw(); }
+    o.onresize = () => { s = (o.w - 30) / W; ox = 16; gy = o.h - 26; };
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      // 地面・目盛り
+      ctx.fillStyle = COL.card; ctx.fillRect(0, gy, w, H - gy);
+      line(ctx, [[0, gy], [w, gy]], COL.ink, 2);
+      for (let x = 0; x <= W; x += 5) { line(ctx, [[PX(x), gy], [PX(x), gy + 4]], COL.muted, 1); txt(ctx, x + '', PX(x), gy + 13, { size: 9.5, color: COL.muted, align: 'center', mono: true }); }
+      txt(ctx, 'm', w - 8, gy + 13, { size: 9.5, color: COL.muted, align: 'right' });
+      for (let y = 5; PY(y) > 8; y += 5) { line(ctx, [[0, PY(y)], [w, PY(y)]], COL.grid, 1); txt(ctx, y + ' m', 4, PY(y) - 7, { size: 9.5, color: COL.muted }); }
+      // 台
+      if (st.h0 > 0) { ctx.fillStyle = COL.line; ctx.fillRect(PX(lx) - 14, PY(st.h0), 14, st.h0 * s); }
+      const T = flightT(), t = Math.min(st.t, T);
+      // ストロボ
+      const pts = []; for (let k = 0; k * 0.2 <= t + 1e-9; k++) pts.push(pos(k * 0.2));
+      if (st.shadow && (st.fly || st.t > 0)) {
+        pts.forEach(p => { line(ctx, [[PX(p.x), PY(p.y)], [PX(p.x), gy]], COL.blue, 1, [2, 4]); dot(ctx, PX(p.x), gy - 4, 3.5, COL.blue);
+          line(ctx, [[PX(p.x), PY(p.y)], [PX(0.8), PY(p.y)]], COL.orange, 1, [2, 4]); dot(ctx, PX(0.8), PY(p.y), 3.5, COL.orange); });
+        txt(ctx, '水平の影', PX(pos(t).x), gy - 14, { size: 10, color: COL.blue, align: 'center', bg: COL.paper });
+        txt(ctx, '鉛直の影', PX(0.8) + 6, PY(st.h0) - 12, { size: 10, color: COL.orange, bg: COL.paper });
+      }
+      pts.forEach(p => dot(ctx, PX(p.x), PY(p.y), 4, COL.card, COL.muted));
+      if (st.drop) { for (let k = 0; k * 0.2 <= t + 1e-9; k++) { const yy = st.h0 - 0.5 * G * (k * 0.2) ** 2; if (yy >= 0) dot(ctx, PX(lx) + 9, PY(yy), 3, COL.green); }
+        const yy = Math.max(0, st.h0 - 0.5 * G * st.t * st.t); dot(ctx, PX(lx) + 9, PY(yy), 7, COL.green); }
+      const p = pos(t), bx = PX(p.x), by = PY(Math.max(0, p.y));
+      if (by < 4) { arrow(ctx, bx, 26, bx, 6, COL.red, 2, 7); txt(ctx, '画面の上', bx + 6, 30, { size: 10, color: COL.red }); }
+      else if (bx > w) { arrow(ctx, w - 26, by, w - 6, by, COL.red, 2, 7); }
+      else dot(ctx, bx, by, 8, COL.red, COL.ink);
+      if (!st.fly && st.t === 0) {
+        const ax = PX(lx) + st.vx * 0.5 * s, ay = PY(st.h0) - st.vy * 0.5 * s;
+        arrow(ctx, PX(lx), PY(st.h0), ax, ay, COL.red, 3, 11); dot(ctx, ax, ay, 9, COL.card, COL.red);
+        txt(ctx, 'ドラッグ', ax + 12, ay - 10, { size: 10.5, color: COL.red, bold: true });
+      } else if (st.comp) {
+        const vy = st.vy - G * t, k = 0.5 * s;
+        arrow(ctx, bx, by, bx + st.vx * k, by, COL.blue, 2.5, 8); arrow(ctx, bx, by, bx, by - vy * k, COL.orange, 2.5, 8);
+        txt(ctx, 'vₓ', bx + st.vx * k + 6, by, { size: 11, color: COL.blue, bold: true }); txt(ctx, 'v_y', bx + 6, by - vy * k, { size: 11, color: COL.orange, bold: true });
+      }
+      const v0 = Math.hypot(st.vx, st.vy), th = Math.atan2(st.vy, st.vx) * 180 / Math.PI;
+      const hm = st.h0 + (st.vy > 0 ? st.vy * st.vy / (2 * G) : 0);
+      up({ v0: fmt(v0, 1) + ' m/s', th: fmt(th, 0) + '°', hm: fmt(hm, 1) + ' m', T: fmt(T, 2) + ' s', R: fmt(st.vx * T, 1) + ' m' });
+    };
+    draggable(o, {
+      hit: p => { if (st.fly || st.t > 0) return null; const ax = PX(lx) + st.vx * 0.5 * s, ay = PY(st.h0) - st.vy * 0.5 * s; return Math.hypot(p.x - ax, p.y - ay) < 22 ? 1 : null; },
+      move: (_, p) => { let vx = (p.x - PX(lx)) / (0.5 * s), vy = (PY(st.h0) - p.y) / (0.5 * s); const v = Math.hypot(vx, vy); if (v > 20) { vx *= 20 / v; vy *= 20 / v; }
+        st.vx = Math.round(Math.max(0, vx) * 2) / 2; st.vy = Math.round(vy * 2) / 2; touch(); o.draw(); }
+    });
+    loop(b, dt => { if (!st.fly) return; st.t += dt * (st.slow ? 0.35 : 1); const T = flightT(); if (st.t >= T + (st.drop ? 0.3 : 0)) { st.t = Math.max(T, st.drop ? Math.sqrt(2 * st.h0 / G) : 0); st.fly = false; pb.textContent = '▶ もう一度投げる'; } o.draw(); });
+  }
+};
+
+// ---------- 3-A 力の合成とつりあい ----------
+LABS.forces = {
+  title: '力をドラッグして合成する',
+  tryText: '矢印の<b>先端の●をドラッグ</b>。赤い矢印が<b>合力</b>です。「3つの力」にして、合力が 0 になる（<b>つりあう</b>）ように F₃ を動かしてみよう。',
+  why: '2つの力の合力は、2つの矢印を2辺とする<b>平行四辺形の対角線</b>。成分で見ると、x成分どうし・y成分どうしをたすだけです。3つの力がつりあうのは、<b>合力のx成分もy成分も0</b>のとき。矢印を順につなぐと閉じた三角形になります。',
+  build(b, touch) {
+    const F = [[3, 1], [1, 3], [-4, -4]]; let n = 2, comp = false;
+    const cols = () => [COL.blue, COL.violet, COL.orange];
+    const o = makeCanvas(b, w => w < 560 ? 0.95 : 0.6, { maxH: 480, label: '力の合成' });
+    const c = h('div', { class: 'btns' }); b.append(c);
+    seg(c, [[2, '2つの力'], [3, '3つの力']], 2, v => { n = v; touch(); o.draw(); });
+    check(c, 'fo-cp', '成分を表示', false, v => { comp = v; o.draw(); });
+    btn(c, '直角に 3 N と 4 N', () => { F[0] = [3, 0]; F[1] = [0, 4]; n = 2; o.draw(); touch(); });
+    const up = reads(b, [['f1', '|F₁|'], ['f2', '|F₂|'], ['f3', '|F₃|'], ['r', '合力の大きさ', true], ['rc', '合力の成分 (x, y)']]);
+    let s = 30, cx = 0, cy = 0;
+    o.onresize = () => { s = Math.min(o.w, o.h) / 13; cx = o.w / 2; cy = o.h / 2; };
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      ctx.strokeStyle = COL.grid; ctx.lineWidth = 1;
+      for (let i = -20; i <= 20; i++) { const x = cx + i * s, y = cy + i * s;
+        if (x > 0 && x < w) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+        if (y > 0 && y < H) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); } }
+      line(ctx, [[0, cy], [w, cy]], COL.line, 1.5); line(ctx, [[cx, 0], [cx, H]], COL.line, 1.5);
+      txt(ctx, '1目盛り＝1 N', 8, 12, { size: 10.5, color: COL.muted });
+      const P = v => [cx + v[0] * s, cy - v[1] * s];
+      const R = [0, 0]; for (let i = 0; i < n; i++) { R[0] += F[i][0]; R[1] += F[i][1]; }
+      if (n === 2) {
+        line(ctx, [P(F[0]), P([F[0][0] + F[1][0], F[0][1] + F[1][1]]), P(F[1])], COL.muted, 1.2, [5, 4]);
+      } else {
+        let a = [0, 0]; const pts = [P(a)]; for (let i = 0; i < 3; i++) { a = [a[0] + F[i][0], a[1] + F[i][1]]; pts.push(P(a)); }
+        line(ctx, pts, COL.muted, 1, [2, 4]);
+      }
+      const cl = cols();
+      for (let i = 0; i < n; i++) {
+        const [x2, y2] = P(F[i]);
+        if (comp) { line(ctx, [[cx, cy], [x2, cy], [x2, y2]], cl[i], 1.2, [3, 3]); }
+        arrow(ctx, cx, cy, x2, y2, cl[i], 3, 11);
+        dot(ctx, x2, y2, 7, COL.card, cl[i]);
+        txt(ctx, 'F' + '₁₂₃'[i], x2 + (F[i][0] >= 0 ? 10 : -26), y2 - 12, { size: 13, bold: true, color: cl[i] });
+      }
+      const rl = Math.hypot(R[0], R[1]);
+      if (rl > 0.01) { const [x2, y2] = P(R); arrow(ctx, cx, cy, x2, y2, COL.red, 3.5, 12); txt(ctx, '合力', x2 + 8, y2 + 14, { size: 12, bold: true, color: COL.red, bg: COL.card }); }
+      dot(ctx, cx, cy, 9, COL.card, COL.ink);
+      if (n === 3 && rl < 0.01) txt(ctx, 'つりあっている！', w / 2, 20, { size: 15, bold: true, color: COL.green, align: 'center', bg: COL.green_soft });
+      const m = v => fmt(Math.hypot(v[0], v[1]), 2) + ' N';
+      up({ f1: m(F[0]), f2: m(F[1]), f3: n === 3 ? m(F[2]) : '—', r: fmt(rl, 2) + ' N', rc: '(' + fmt(R[0], 1) + ', ' + fmt(R[1], 1) + ')' });
+    };
+    draggable(o, {
+      hit: p => { for (let i = n - 1; i >= 0; i--) { if (Math.hypot(p.x - (cx + F[i][0] * s), p.y - (cy - F[i][1] * s)) < 18) return i; } return null; },
+      move: (i, p) => { F[i] = [clamp(Math.round((p.x - cx) / s * 2) / 2, -8, 8), clamp(Math.round((cy - p.y) / s * 2) / 2, -8, 8)]; touch(); o.draw(); }
+    });
+  }
+};
+
+// ---------- 3-B 斜面上の物体 ----------
+LABS.slope = {
+  title: '斜面の上の物体',
+  tryText: '<b>斜面のてっぺん（●）をドラッグ</b>して角度を変えよう。重力 mg が「斜面に平行な成分」と「斜面に垂直な成分」に分かれます。',
+  why: '重力 mg を斜面に沿って分解すると、<b>斜面に平行な成分 mg sinθ</b>（物体をすべり下ろそうとする）と<b>垂直な成分 mg cosθ</b>。垂直方向はつりあうので<b>垂直抗力 N ＝ mg cosθ</b>。静止しているなら、静止摩擦力が mg sinθ と同じ大きさで斜面上向きにはたらいています。角度を大きくするほど sinθ が大きくなり、すべりやすくなります。',
+  build(b, touch) {
+    const st = { th: 30, m: 2, fr: true, comp: true };
+    const o = makeCanvas(b, w => w < 560 ? 0.85 : 0.55, { maxH: 470, label: '斜面上の物体にはたらく力' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    const sth = slider(c, { id: 'sl-th', label: '斜面の角度 θ', min: 0, max: 60, step: 1, value: 30, unit: '°', d: 0 }, v => { st.th = v; touch(); o.draw(); });
+    slider(c, { id: 'sl-m', label: '質量 m', min: 0.5, max: 5, step: 0.5, value: 2, unit: 'kg' }, v => { st.m = v; touch(); o.draw(); });
+    const ck = h('div', { class: 'btns' }); c.append(ck);
+    check(ck, 'sl-cp', '重力の分解', true, v => { st.comp = v; o.draw(); });
+    check(ck, 'sl-fr', '静止摩擦力', true, v => { st.fr = v; o.draw(); });
+    const up = reads(b, [['w', '重力 mg'], ['p', '平行成分 mg sinθ'], ['q', '垂直成分 mg cosθ'], ['n', '垂直抗力 N', true]]);
+    let Ax, Ay, Ls, top;
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const th = st.th * Math.PI / 180;
+      Ax = 30; Ay = H - 26; Ls = Math.min(w - 80, (H - 50) / Math.sin(Math.PI / 3));
+      const Bx = Ax + Ls * Math.cos(th), Cy = Ay - Ls * Math.sin(th); top = [Bx, Cy];
+      ctx.fillStyle = COL.line; ctx.beginPath(); ctx.moveTo(Ax, Ay); ctx.lineTo(Bx, Ay); ctx.lineTo(Bx, Cy); ctx.closePath(); ctx.fill();
+      line(ctx, [[0, Ay], [w, Ay]], COL.ink, 2); line(ctx, [[Ax, Ay], [Bx, Cy]], COL.ink, 2.5);
+      ctx.save(); ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(Ax, Ay, 34, -th, 0); ctx.stroke(); ctx.restore();
+      txt(ctx, 'θ', Ax + 42, Ay - 9, { size: 13, bold: true });
+      // 物体
+      const d = Ls * 0.55, ux = Math.cos(th), uy = -Math.sin(th), nx = Math.sin(th), ny = Math.cos(th); // 斜面方向・法線（画面座標で上向き＝-）
+      const bs = 46, px = Ax + ux * d, py = Ay + uy * d;
+      const cxp = px - nx * bs / 2, cyp = py - ny * bs / 2;
+      ctx.save(); ctx.translate(cxp, cyp); ctx.rotate(-th); ctx.fillStyle = COL.blue_soft; ctx.strokeStyle = COL.ink; ctx.lineWidth = 2;
+      ctx.fillRect(-bs / 2, -bs / 2, bs, bs); ctx.strokeRect(-bs / 2, -bs / 2, bs, bs); ctx.restore();
+      const k = (H * 0.42) / (5 * G), mg = st.m * G;
+      const W = [0, mg * k], Pp = [-ux * mg * Math.sin(th) * k, -uy * mg * Math.sin(th) * k], Q = [nx * mg * Math.cos(th) * k, ny * mg * Math.cos(th) * k];
+      if (st.comp) {
+        line(ctx, [[cxp + Pp[0], cyp + Pp[1]], [cxp + W[0], cyp + W[1]], [cxp + Q[0], cyp + Q[1]]], COL.muted, 1, [3, 3]);
+        arrow(ctx, cxp, cyp, cxp + Pp[0], cyp + Pp[1], COL.orange, 2.5, 9); arrow(ctx, cxp, cyp, cxp + Q[0], cyp + Q[1], COL.violet, 2.5, 9);
+        if (st.th > 4) txt(ctx, 'mg sinθ', cxp + Pp[0] - 4, cyp + Pp[1] - 12, { size: 11, bold: true, color: COL.orange, align: 'right', bg: COL.paper });
+        txt(ctx, 'mg cosθ', cxp + Q[0] + 8, cyp + Q[1] + 4, { size: 11, bold: true, color: COL.violet, bg: COL.paper });
+      }
+      arrow(ctx, cxp, cyp, cxp + W[0], cyp + W[1], COL.blue, 3, 10); txt(ctx, 'mg', cxp + 6, cyp + W[1] + 6, { size: 12, bold: true, color: COL.blue });
+      const Nn = mg * Math.cos(th) * k; arrow(ctx, px - nx * 2, py - ny * 2, px - nx * (2 + Nn), py - ny * (2 + Nn), COL.green, 3, 10);
+      txt(ctx, 'N', px - nx * (Nn + 12) + 8, py - ny * (Nn + 12), { size: 12, bold: true, color: COL.green });
+      if (st.fr && st.th > 0) { const f = mg * Math.sin(th) * k; arrow(ctx, px + ux * bs / 2, py + uy * bs / 2, px + ux * (bs / 2 + f), py + uy * (bs / 2 + f), COL.red, 3, 10);
+        txt(ctx, '摩擦力', px + ux * (bs / 2 + f) + 6, py + uy * (bs / 2 + f) - 10, { size: 11, bold: true, color: COL.red, bg: COL.paper }); }
+      dot(ctx, Bx, Cy, 9, COL.card, COL.red);
+      up({ w: fmt(mg, 1) + ' N', p: fmt(mg * Math.sin(th), 1) + ' N', q: fmt(mg * Math.cos(th), 1) + ' N', n: fmt(mg * Math.cos(th), 1) + ' N' });
+    };
+    draggable(o, {
+      hit: p => top && Math.hypot(p.x - top[0], p.y - top[1]) < 22 ? 1 : null,
+      move: (_, p) => { const a = Math.atan2(Ay - p.y, p.x - Ax) * 180 / Math.PI; st.th = clamp(Math.round(a), 0, 60); sth.v = st.th; touch(); o.draw(); }
+    });
+  }
+};
+
+// ---------- 4-A 箱を引っぱる（摩擦力） ----------
+LABS.friction = {
+  title: '箱を引っぱる（摩擦力）',
+  tryText: '「引く力 F」を少しずつ大きくしよう。<b>箱が動き出す瞬間</b>と、そのときの右のグラフの点の動きに注目。',
+  why: '箱が止まっている間は、<b>静止摩擦力＝引く力</b>（つりあい）なので、グラフは斜めの直線を上ります。静止摩擦力には上限があり、それが<b>最大摩擦力 μN</b>。F がこれをこえると箱はすべり出し、摩擦力は<b>動摩擦力 μ′N</b>（一定で、ふつう最大摩擦力より小さい）に変わります。動いている間は運動方程式 <b>ma ＝ F − μ′N</b> で加速します。',
+  build(b, touch) {
+    const st = { m: 2, mus: 0.5, muk: 0.3, F: 0, x: 0, v: 0 };
+    const o = makeCanvas(b, w => w < 560 ? 1.05 : 0.48, { maxH: 520, label: '箱と摩擦力のグラフ' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    const sF = slider(c, { id: 'fr-F', label: '引く力 F', min: 0, max: 30, step: 0.5, value: 0, unit: 'N' }, v => { st.F = v; touch(); });
+    slider(c, { id: 'fr-m', label: '質量 m', min: 1, max: 5, step: 0.5, value: 2, unit: 'kg' }, v => { st.m = v; touch(); });
+    const sS = slider(c, { id: 'fr-s', label: '静止摩擦係数 μ', min: 0.1, max: 0.8, step: 0.05, value: 0.5, d: 2 }, v => { st.mus = v; if (st.muk > v) { st.muk = v; sK.v = v; } touch(); });
+    const sK = slider(c, { id: 'fr-k', label: '動摩擦係数 μ′', min: 0.05, max: 0.8, step: 0.05, value: 0.3, d: 2 }, v => { st.muk = Math.min(v, st.mus); if (v > st.mus) sK.v = st.mus; touch(); });
+    const bb = h('div', { class: 'btns' }); c.append(bb);
+    btn(bb, '↺ 止めて F を 0 に', () => { st.v = 0; st.x = 0; st.F = 0; sF.v = 0; });
+    const up = reads(b, [['fm', '最大摩擦力 μN'], ['fk', '動摩擦力 μ′N'], ['f', 'いまの摩擦力', true], ['a', '加速度 a'], ['v', '速さ v']]);
+    let fric = 0, acc = 0;
+    function step(dt) {
+      const N = st.m * G, fm = st.mus * N, fk = st.muk * N;
+      if (st.v <= 0) {
+        if (st.F <= fm + 1e-9) { fric = st.F; acc = 0; st.v = 0; }
+        else { fric = fk; acc = (st.F - fk) / st.m; st.v += acc * dt; }
+      } else {
+        fric = fk; acc = (st.F - fk) / st.m; st.v += acc * dt;
+        if (st.v <= 0) { st.v = 0; fric = Math.min(st.F, fm); acc = 0; }
+      }
+      st.v = Math.min(st.v, 30); st.x += st.v * dt;
+    }
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const wide = w >= 560, sw = wide ? w * 0.56 : w, sh = wide ? H : H * 0.5;
+      const N = st.m * G, fm = st.mus * N, fk = st.muk * N;
+      // 床
+      const fy = sh - 40; ctx.fillStyle = COL.card; ctx.fillRect(0, fy, sw, sh - fy);
+      line(ctx, [[0, fy], [sw, fy]], COL.ink, 2);
+      const pm = 70, off = (st.x * pm) % pm;
+      for (let x = -off; x < sw; x += pm) line(ctx, [[x, fy + 2], [x - 10, fy + 14]], COL.muted, 1);
+      const bw = 66 + st.m * 6, bx = sw * 0.36 - bw / 2;
+      ctx.fillStyle = COL.blue_soft; ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.fillRect(bx, fy - bw * 0.7, bw, bw * 0.7); ctx.strokeRect(bx, fy - bw * 0.7, bw, bw * 0.7);
+      txt(ctx, st.m + ' kg', bx + bw / 2, fy - bw * 0.35, { size: 12, bold: true, align: 'center', mono: true });
+      const k = Math.min(4, (sw * 0.36 - 10) / 30);
+      if (st.F > 0) { arrow(ctx, bx + bw, fy - bw * 0.35, bx + bw + st.F * k, fy - bw * 0.35, COL.blue, 3, 10); txt(ctx, 'F', bx + bw + st.F * k + 6, fy - bw * 0.35 - 10, { size: 12, bold: true, color: COL.blue }); }
+      if (fric > 0.01) { arrow(ctx, bx + bw * 0.5, fy - 3, bx + bw * 0.5 - fric * k, fy - 3, COL.orange, 3, 10); txt(ctx, '摩擦力', bx + bw * 0.5 - fric * k - 2, fy - 16, { size: 11, bold: true, color: COL.orange, align: 'right', bg: COL.paper }); }
+      txt(ctx, st.v > 0 ? 'すべっている' : '止まっている', 12, 18, { size: 13, bold: true, color: st.v > 0 ? COL.red : COL.green });
+      // グラフ
+      const bx2 = wide ? { x: sw + 44, y: 26, w: w - sw - 60, h: H - 64 } : { x: 46, y: sh + 22, w: w - 64, h: H - sh - 58 };
+      const top = Math.max(10, Math.ceil((fm * 1.15) / 5) * 5);
+      const A = axes(ctx, bx2, [0, 30], [0, top], { xl: '引く力 F [N]', yl: '摩擦力 [N]', xstep: 5, ystep: 5 });
+      line(ctx, [[A.X(0), A.Y(0)], [A.X(Math.min(fm, 30)), A.Y(Math.min(fm, 30))]], COL.green, 2.5);
+      line(ctx, [[A.X(Math.min(fm, 30)), A.Y(fk)], [A.X(30), A.Y(fk)]], COL.orange, 2.5);
+      if (fm <= 30) { line(ctx, [[A.X(fm), A.Y(fm)], [A.X(fm), A.Y(fk)]], COL.muted, 1, [3, 3]); txt(ctx, '最大摩擦力', A.X(fm) + 4, A.Y(fm) - 8, { size: 10, color: COL.green, bold: true, bg: COL.card }); }
+      txt(ctx, '動摩擦力', A.X(30) - 2, A.Y(fk) - 9, { size: 10, color: COL.orange, bold: true, align: 'right', bg: COL.card });
+      dot(ctx, A.X(st.F), A.Y(fric), 6, COL.red, COL.card);
+      up({ fm: fmt(fm, 1) + ' N', fk: fmt(fk, 1) + ' N', f: fmt(fric, 1) + ' N', a: fmt(acc, 2) + ' m/s²', v: fmt(st.v, 1) + ' m/s' });
+    };
+    loop(b, dt => { step(dt); o.draw(); });
+  }
+};
+
+// ---------- 4-B エレベーターの体重計 ----------
+LABS.elevator = {
+  title: 'エレベーターの中の体重計',
+  tryText: '加速度のスライダーを動かして、<b>体重計の目盛り</b>がどう変わるか見よう。上向きを正とします。',
+  why: '人にはたらく力は、重力 mg（下向き）と床からの垂直抗力 N（上向き）。運動方程式 <b>ma ＝ N − mg</b> より <b>N ＝ m(g ＋ a)</b>。体重計が示すのはこの N です。上向きに加速（a&gt;0）すると重く、下向きに加速（a&lt;0）すると軽く表示されます。<b>速度の向きではなく加速度の向き</b>で決まることに注意。等速で動いている間は、止まっているときと同じ表示です。',
+  build(b, touch) {
+    const st = { m: 50, a: 0, v: 0, y: 0 };
+    const o = makeCanvas(b, w => w < 560 ? 0.95 : 0.52, { maxH: 470, label: 'エレベーター' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    const sA = slider(c, { id: 'el-a', label: '加速度 a（上向きが正）', min: -4, max: 4, step: 0.5, value: 0, unit: 'm/s²' }, v => { st.a = v; touch(); });
+    slider(c, { id: 'el-m', label: '人の質量 m', min: 30, max: 80, step: 5, value: 50, unit: 'kg', d: 0 }, v => { st.m = v; touch(); });
+    const bb = h('div', { class: 'btns' }); c.append(bb);
+    btn(bb, '止める（v=0, a=0）', () => { st.v = 0; st.a = 0; sA.v = 0; });
+    const up = reads(b, [['N', '垂直抗力 N'], ['kg', '体重計の表示', true], ['v', '速度 v'], ['st', '動き']]);
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const shaftW = Math.min(240, w * 0.5), sx = 20;
+      ctx.fillStyle = COL.card; ctx.fillRect(sx, 0, shaftW, H);
+      const fh = 90, off = ((st.y * 30) % fh + fh) % fh;
+      for (let y = -fh + off; y < H + fh; y += fh) { line(ctx, [[sx, y], [sx + shaftW, y]], COL.line, 2);
+        const floor = Math.round((st.y * 30 + (H / 2 - y)) / fh); txt(ctx, floor + 'F', sx + 6, y - 10, { size: 10, color: COL.muted, mono: true }); }
+      const cw = shaftW - 50, ch = H * 0.62, cx0 = sx + 25, cy0 = (H - ch) / 2;
+      ctx.fillStyle = COL.paper; ctx.strokeStyle = COL.ink; ctx.lineWidth = 2.5; ctx.fillRect(cx0, cy0, cw, ch); ctx.strokeRect(cx0, cy0, cw, ch);
+      line(ctx, [[cx0 + cw / 2, 0], [cx0 + cw / 2, cy0]], COL.muted, 1.5);
+      // 体重計と人
+      const fy = cy0 + ch - 6, px = cx0 + cw / 2;
+      ctx.fillStyle = COL.line; ctx.fillRect(px - 26, fy - 10, 52, 10);
+      const ph = ch * 0.55; ctx.strokeStyle = COL.ink; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      dot(ctx, px, fy - 10 - ph, 10, COL.card, COL.ink);
+      line(ctx, [[px, fy - ph], [px, fy - 10 - ph * 0.42]], COL.ink, 3);
+      line(ctx, [[px, fy - 10 - ph * 0.42], [px - 9, fy - 10]], COL.ink, 3); line(ctx, [[px, fy - 10 - ph * 0.42], [px + 9, fy - 10]], COL.ink, 3);
+      line(ctx, [[px - 14, fy - ph * 0.65], [px, fy - ph * 0.85], [px + 14, fy - ph * 0.65]], COL.ink, 3);
+      const N = st.m * (G + st.a), k = (ch * 0.42) / (80 * 13.8);
+      arrow(ctx, px + 22, fy - 10 - ph * 0.5, px + 22, fy - 10 - ph * 0.5 + st.m * G * k, COL.blue, 3, 9);
+      txt(ctx, 'mg', px + 28, fy - 10 - ph * 0.5 + st.m * G * k - 6, { size: 11, bold: true, color: COL.blue });
+      arrow(ctx, px - 22, fy - 10, px - 22, fy - 10 - N * k, COL.green, 3, 9);
+      txt(ctx, 'N', px - 34, fy - 10 - N * k + 4, { size: 11, bold: true, color: COL.green, align: 'right' });
+      if (Math.abs(st.a) > 0) arrow(ctx, cx0 + cw + 12, H / 2, cx0 + cw + 12, H / 2 - st.a * 12, COL.red, 3, 9);
+      // メーター
+      const mx = sx + shaftW + 20, mw = w - mx - 16;
+      if (mw > 90) {
+        const kg = N / G, r = Math.min(mw / 2 - 6, H * 0.3), ccx = mx + mw / 2, ccy = H * 0.48;
+        ctx.save(); ctx.lineWidth = 12; ctx.strokeStyle = COL.grid; ctx.beginPath(); ctx.arc(ccx, ccy, r, Math.PI * 0.8, Math.PI * 2.2); ctx.stroke();
+        const fr = clamp(kg / 120, 0, 1); ctx.strokeStyle = kg > st.m + 0.01 ? COL.red : kg < st.m - 0.01 ? COL.blue : COL.green; ctx.beginPath(); ctx.arc(ccx, ccy, r, Math.PI * 0.8, Math.PI * (0.8 + 1.4 * fr)); ctx.stroke(); ctx.restore();
+        txt(ctx, fmt(kg, 1), ccx, ccy - 4, { size: Math.max(18, r * 0.42), bold: true, mono: true, align: 'center' });
+        txt(ctx, 'kg（体重計の表示）', ccx, ccy + r * 0.38, { size: 11, color: COL.muted, align: 'center' });
+        txt(ctx, '止まっているとき ' + st.m + ' kg', ccx, ccy + r + 18, { size: 11, color: COL.muted, align: 'center' });
+      }
+      const mv = Math.abs(st.v) < 0.05 ? (st.a === 0 ? '静止' : '動き出す') : (st.v > 0 ? '上へ' : '下へ') + (st.a === 0 ? '等速' : (st.a * st.v > 0 ? '加速' : '減速'));
+      up({ N: fmt(N, 0) + ' N', kg: fmt(N / G, 1) + ' kg', v: fmt(st.v, 1) + ' m/s', st: mv });
+    };
+    loop(b, dt => { st.v += st.a * dt; st.v = clamp(st.v, -12, 12); st.y += st.v * dt; o.draw(); });
+  }
+};
+
+// ---------- 5-A ジェットコースター ----------
+LABS.coaster = {
+  title: 'ジェットコースター（力学的エネルギー）',
+  tryText: 'レールの<b>○をドラッグ</b>してコースを作り、ボールを走らせよう。ボール自体をドラッグすると、好きな位置から静かに離せます。右のグラフは<b>エネルギーの内訳</b>です。',
+  why: '摩擦がなければ、<b>運動エネルギー K と位置エネルギー U の和（力学的エネルギー）は一定</b>。低いところでは U が K に変わって速くなり、高いところでは遅くなります。ボールは離した高さより高い山はこえられません。「摩擦あり」にすると、力学的エネルギーの一部が<b>熱</b>に変わり、だんだん低い所までしか上がれなくなります。',
+  build(b, touch) {
+    const hs = [8, 1, 5.5, 0.6, 3.2, 6.5];
+    const st = { s: 0, dir: 1, E: 0, heat: 0, run: true, fric: false, m: 1 };
+    let pts = [], cum = [], sc = 30, wTrack = 300, xsF = [0.03, 0.22, 0.41, 0.6, 0.79, 0.97], ctrl = [];
+    const o = makeCanvas(b, w => w < 560 ? 0.95 : 0.52, { maxH: 470, label: 'ジェットコースター' });
+    const c = h('div', { class: 'btns' }); b.append(c);
+    const pb = btn(c, '⏸ 止める', () => { st.run = !st.run; pb.textContent = st.run ? '⏸ 止める' : '▶ 走らせる'; }, true);
+    btn(c, '↺ スタートから', () => { start(0); });
+    check(c, 'co-fr', '摩擦あり', false, v => { st.fric = v; touch(); start(st.s0 || 0); });
+    const up = reads(b, [['h', '高さ h'], ['v', '速さ v'], ['U', '位置エネルギー U'], ['K', '運動エネルギー K'], ['E', 'U＋K', true]]);
+    const PX = x => 14 + x * sc, PY = y => o.h - 24 - y * sc;
+    function build() {
+      sc = (o.h - 50) / 10; wTrack = (o.w - (o.w < 420 ? 96 : 140)) ;
+      const W = wTrack / sc; ctrl = hs.map((y, i) => [xsF[i] * W, y]);
+      const P = [ctrl[0], ...ctrl, ctrl[ctrl.length - 1]]; pts = [];
+      for (let i = 1; i < P.length - 2; i++) for (let j = 0; j < 40; j++) { const t = j / 40, p0 = P[i - 1], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2];
+        const f = k => 0.5 * ((2 * p1[k]) + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t * t + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t * t * t);
+        pts.push([f(0), clamp(f(1), 0, 10)]); }
+      pts.push(ctrl[ctrl.length - 1]);
+      cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    }
+    function at(s) { s = clamp(s, 0, cum[cum.length - 1]); let lo = 0, hi = cum.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (cum[m] <= s) lo = m; else hi = m; }
+      const f = (s - cum[lo]) / ((cum[hi] - cum[lo]) || 1); return [pts[lo][0] + (pts[hi][0] - pts[lo][0]) * f, pts[lo][1] + (pts[hi][1] - pts[lo][1]) * f]; }
+    function start(s) { st.s = s; st.s0 = s; st.E = st.m * G * at(s)[1]; st.heat = 0; st.dir = 1; const h1 = at(s + 0.05)[1], h0 = at(Math.max(0, s - 0.05))[1]; st.dir = h1 < h0 ? 1 : -1; if (s <= 0.01) st.dir = 1; }
+    o.onresize = () => { build(); start(st.s0 || 0); };
+    function step(dt) {
+      const Smax = cum[cum.length - 1];
+      for (let k = 0; k < 10; k++) {
+        const d = dt / 10, hNow = at(st.s)[1], K = st.E - st.m * G * hNow, v = Math.sqrt(Math.max(0, 2 * K / st.m));
+        if (v < 0.02) { const hp = at(st.s + 0.02)[1], hm = at(st.s - 0.02)[1]; if (Math.abs(hp - hm) < 1e-4 && st.fric) { continue; } st.dir = hp < hm ? 1 : -1; }
+        let s2 = st.s + st.dir * Math.max(v, 0.05) * d;
+        if (s2 <= 0) { s2 = 0; st.dir = 1; } if (s2 >= Smax) { s2 = Smax; st.dir = -1; }
+        const K2 = st.E - st.m * G * at(s2)[1];
+        if (K2 < 0) { st.dir = -st.dir; continue; }
+        if (st.fric) { const loss = 0.06 * st.m * G * Math.abs(s2 - st.s); const Kf = K2 - loss; if (Kf < 0) { st.heat += K2; st.E -= K2; } else { st.heat += loss; st.E -= loss; } }
+        st.s = s2;
+      }
+    }
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      for (let y = 0; y <= 10; y += 2) { line(ctx, [[0, PY(y)], [PX(wTrack / sc), PY(y)]], COL.grid, 1); txt(ctx, y + 'm', 2, PY(y) - 7, { size: 9.5, color: COL.muted, mono: true }); }
+      const E0 = st.E + st.heat, hE = st.E / (st.m * G);
+      line(ctx, [[PX(0), PY(hE)], [PX(wTrack / sc), PY(hE)]], COL.red, 1, [5, 4]);
+      txt(ctx, 'ここまで上がれる', PX(wTrack / sc) - 2, PY(hE) - 8, { size: 10, color: COL.red, align: 'right', bg: COL.paper });
+      ctx.fillStyle = COL.card; ctx.beginPath(); ctx.moveTo(PX(pts[0][0]), PY(0)); pts.forEach(p => ctx.lineTo(PX(p[0]), PY(p[1]))); ctx.lineTo(PX(pts[pts.length - 1][0]), PY(0)); ctx.closePath(); ctx.fill();
+      line(ctx, pts.map(p => [PX(p[0]), PY(p[1])]), COL.ink, 3);
+      line(ctx, [[0, PY(0)], [PX(wTrack / sc) + 6, PY(0)]], COL.ink, 1.5);
+      ctrl.forEach(p => dot(ctx, PX(p[0]), PY(p[1]), 7, COL.card, COL.muted));
+      const p = at(st.s); dot(ctx, PX(p[0]), PY(p[1]) - 9, 9, COL.red, COL.ink);
+      // エネルギー棒
+      const bx = PX(wTrack / sc) + 22, bw = w - bx - 10, by = 18, bh = H - 60;
+      const U = st.m * G * p[1], K = Math.max(0, st.E - U), mx = st.m * G * 10;
+      const bars = [['U', U, COL.blue], ['K', K, COL.red], ['熱', st.heat, COL.orange]];
+      const one = bw / 3 - 4;
+      bars.forEach(([lb, val, col], i) => { const x = bx + i * (one + 4); ctx.fillStyle = COL.grid; ctx.fillRect(x, by, one, bh);
+        const hh = val / mx * bh; ctx.fillStyle = col; ctx.fillRect(x, by + bh - hh, one, hh); txt(ctx, lb, x + one / 2, by + bh + 12, { size: 11, bold: true, align: 'center', color: col }); });
+      line(ctx, [[bx - 3, by + bh - E0 / mx * bh], [bx + bw, by + bh - E0 / mx * bh]], COL.ink, 1.2, [3, 3]);
+      txt(ctx, 'J', bx + bw - 2, by - 8, { size: 9.5, color: COL.muted, align: 'right' });
+      up({ h: fmt(p[1], 2) + ' m', v: fmt(Math.sqrt(2 * K / st.m), 1) + ' m/s', U: fmt(U, 1) + ' J', K: fmt(K, 1) + ' J', E: fmt(U + K, 1) + ' J' });
+    };
+    draggable(o, {
+      hit: p => { const q = at(st.s); if (Math.hypot(p.x - PX(q[0]), p.y - PY(q[1]) + 9) < 18) return 'ball';
+        for (let i = 0; i < ctrl.length; i++) if (Math.hypot(p.x - PX(ctrl[i][0]), p.y - PY(ctrl[i][1])) < 16) return i; return null; },
+      move: (t, p) => {
+        touch();
+        if (t === 'ball') { let best = 0, bd = 1e9; for (let i = 0; i < pts.length; i++) { const d = Math.hypot(p.x - PX(pts[i][0]), p.y - PY(pts[i][1])); if (d < bd) { bd = d; best = i; } } start(cum[best]); st.drag = true; }
+        else { hs[t] = clamp(Math.round((PY(0) - p.y) / sc * 10) / 10, 0.2, 9.8); build(); start(st.s0 || 0); }
+        o.draw();
+      },
+      up: () => { st.drag = false; }
+    });
+    loop(b, dt => { if (st.run && !st.drag && cum.length) step(dt); o.draw(); });
+  }
+};
+
+// ---------- 5-B ばねにつけた物体 ----------
+LABS.spring = {
+  title: 'ばねにつけた物体（弾性エネルギー）',
+  tryText: '<b>おもりを左右にドラッグ</b>してばねを伸び縮みさせ、手をはなそう。下のグラフで、弾性エネルギーと運動エネルギーの<b>受け渡し</b>を見よう。',
+  why: 'ばねの弾性エネルギーは <b>½kx²</b>（グラフの放物線）。おもりが自然長の位置を通るとき x＝0 なので弾性エネルギーは 0、そのぶん運動エネルギー <b>½mv²</b> が最大になります。摩擦がなければ、2つの和はいつも一定（赤の点線）。ばね定数 k を変えると放物線の開き方が変わります。',
+  build(b, touch) {
+    const st = { k: 40, m: 1, x: 0.25, v: 0, drag: false };
+    const o = makeCanvas(b, w => w < 560 ? 1.0 : 0.58, { maxH: 500, label: 'ばね振り子とエネルギー' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    slider(c, { id: 'sp-k', label: 'ばね定数 k', min: 10, max: 100, step: 5, value: 40, unit: 'N/m', d: 0 }, v => { const E = 0.5 * st.k * st.x * st.x + 0.5 * st.m * st.v * st.v; st.k = v; touch(); });
+    slider(c, { id: 'sp-m', label: '質量 m', min: 0.5, max: 2, step: 0.25, value: 1, unit: 'kg', d: 2 }, v => { st.m = v; touch(); });
+    const bb = h('div', { class: 'btns' }); c.append(bb);
+    btn(bb, '0.30 m 伸ばして離す', () => { st.x = 0.3; st.v = 0; touch(); });
+    btn(bb, '止める', () => { st.x = 0; st.v = 0; });
+    const up = reads(b, [['x', '伸び x'], ['v', '速さ v'], ['U', '弾性エネルギー ½kx²'], ['K', '運動エネルギー ½mv²'], ['E', '合計', true]]);
+    let s = 400, x0 = 200, sy = 60;
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const top = Math.min(130, H * 0.36); s = (w - 70) / 1.15; x0 = 20 + 0.55 * s; sy = top * 0.55;
+      ctx.fillStyle = COL.card; ctx.fillRect(0, 0, w, top);
+      ctx.fillStyle = COL.line; ctx.fillRect(10, sy - 34, 10, 52); line(ctx, [[10, sy + 18], [w, sy + 18]], COL.ink, 2);
+      line(ctx, [[x0, sy - 40], [x0, sy + 26]], COL.red, 1, [3, 3]); txt(ctx, '自然長', x0, sy - 46, { size: 10, color: COL.red, align: 'center' });
+      const bxp = x0 + st.x * s, bw = 30 + st.m * 10;
+      const sp = [[20, sy]]; const n = 14, L = bxp - bw / 2 - 30;
+      for (let i = 1; i < n; i++) sp.push([30 + L * i / n, sy + (i % 2 ? -10 : 10)]); sp.push([30 + L, sy], [bxp - bw / 2, sy]);
+      line(ctx, sp, COL.muted, 2);
+      ctx.fillStyle = COL.blue_soft; ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.fillRect(bxp - bw / 2, sy + 18 - bw * 0.8, bw, bw * 0.8); ctx.strokeRect(bxp - bw / 2, sy + 18 - bw * 0.8, bw, bw * 0.8);
+      if (Math.abs(st.v) > 0.02) arrow(ctx, bxp, sy - bw * 0.8 + 6, bxp + st.v * 40, sy - bw * 0.8 + 6, COL.orange, 2.5, 8);
+      // エネルギーのグラフ
+      const box = { x: 46, y: top + 22, w: w - 66, h: H - top - 58 };
+      const Umax = 0.5 * st.k * 0.4 * 0.4;
+      const A = axes(ctx, box, [-0.4, 0.4], [0, Umax * 1.1], { xl: 'x [m]', yl: 'エネルギー [J]', xstep: 0.1 });
+      const par = []; for (let i = 0; i <= 80; i++) { const x = -0.4 + 0.8 * i / 80; par.push([A.X(x), A.Y(0.5 * st.k * x * x)]); }
+      line(ctx, par, COL.blue, 2.5);
+      const U = 0.5 * st.k * st.x * st.x, K = 0.5 * st.m * st.v * st.v, E = U + K;
+      line(ctx, [[box.x, A.Y(E)], [box.x + box.w, A.Y(E)]], COL.red, 1.2, [5, 4]);
+      const xx = clamp(st.x, -0.4, 0.4);
+      line(ctx, [[A.X(xx), A.Y(0)], [A.X(xx), A.Y(U)]], COL.blue, 6); line(ctx, [[A.X(xx), A.Y(U)], [A.X(xx), A.Y(E)]], COL.red, 6);
+      txt(ctx, 'U', A.X(xx) + 8, A.Y(U / 2), { size: 11, bold: true, color: COL.blue }); if (K > Umax * 0.04) txt(ctx, 'K', A.X(xx) + 8, A.Y(U + K / 2), { size: 11, bold: true, color: COL.red });
+      up({ x: fmt(st.x, 2) + ' m', v: fmt(Math.abs(st.v), 2) + ' m/s', U: fmt(U, 2) + ' J', K: fmt(K, 2) + ' J', E: fmt(E, 2) + ' J' });
+    };
+    draggable(o, {
+      hit: p => { const bxp = x0 + st.x * s, bw = 30 + st.m * 10; return (Math.abs(p.x - bxp) < bw / 2 + 10 && Math.abs(p.y - sy) < 40) ? 1 : null; },
+      move: (_, p) => { st.x = clamp((p.x - x0) / s, -0.4, 0.4); st.v = 0; st.drag = true; touch(); o.draw(); },
+      up: () => { st.drag = false; }
+    });
+    loop(b, dt => { if (!st.drag) { const n = 8, d = dt / n; for (let i = 0; i < n; i++) { const a1 = -st.k / st.m * st.x; st.x += st.v * d + 0.5 * a1 * d * d; const a2 = -st.k / st.m * st.x; st.v += 0.5 * (a1 + a2) * d; } } o.draw(); });
+  }
+};
+
+// ---------- 4-A 電車の中のボール（慣性の法則） ----------
+LABS.inertia = {
+  title: '電車の中のボール（慣性の法則）',
+  tryText: '<b>「アクセル」「ブレーキ」を押しているあいだ</b>電車が加速・減速します。床がツルツル（摩擦なし）のとき、ブレーキをかけるとボールはどう動くかな？ 下のグラフで<b>ボールの速度（赤）</b>に注目しよう。',
+  why: '床に摩擦がないと、ボールには水平方向の力がはたらきません。だから電車がブレーキをかけても、ボールは<b>それまでの速度のまま進み続けます（慣性の法則）</b>。電車の中から見ると「ボールが前に転がり出した」ように見えますが、前向きの力がはたらいたわけではなく、<b>電車のほうが遅くなった</b>のです。グラフでも赤い線（ボール）は水平のまま。摩擦ありにすると、床からの摩擦力がボールにはたらくので、ボールの速度も電車に近づいていきます。急ブレーキで体が前につんのめるのも同じ理由です。',
+  build(b, touch) {
+    const L = 9, R = 0.35;
+    const st = { vt: 8, xt: 0, vb: 8, r: 3, at: 0, mu: 0, view: 'ground', hist: [], t: 0, pedal: 0 };
+    const o = makeCanvas(b, w => w < 560 ? 0.95 : 0.55, { maxH: 500, label: '電車とボール' });
+    const c = h('div', { class: 'btns' }); b.append(c);
+    const pedal = (label, a, pri) => { const bt = h('button', { type: 'button', class: 'btn' + (pri ? ' pri' : ''), style: 'touch-action:none;user-select:none;-webkit-user-select:none' }, label);
+      const on = e => { e.preventDefault(); st.pedal = a; touch(); }, off = () => { st.pedal = 0; };
+      bt.addEventListener('pointerdown', on); bt.addEventListener('pointerup', off); bt.addEventListener('pointerleave', off); bt.addEventListener('pointercancel', off);
+      bt.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') on(e); }); bt.addEventListener('keyup', off);
+      bt.addEventListener('contextmenu', e => e.preventDefault()); c.append(bt); return bt; };
+    pedal('▶ アクセル（押し続ける）', 2.5, true); pedal('■ ブレーキ（押し続ける）', -3, false);
+    btn(c, '↺ 最初から', () => { Object.assign(st, { vt: 8, xt: 0, vb: 8, r: 3, hist: [], t: 0 }); });
+    const c2 = h('div', { class: 'btns' }); b.append(c2);
+    seg(c2, [[0, '床：摩擦なし'], [0.3, '床：摩擦あり']], 0, v => { st.mu = v; touch(); });
+    seg(c2, [['ground', '地上から見る'], ['train', '電車の中から見る']], 'ground', v => { st.view = v; touch(); });
+    const up = reads(b, [['vt', '電車の速度（地上から）'], ['vb', 'ボールの速度（地上から）', true], ['vr', 'ボールの速度（電車から）'], ['f', 'ボールにはたらく水平の力']]);
+    let force = 0;
+    function step(dt) {
+      st.at = st.pedal; if (st.vt <= 0 && st.at < 0) st.at = 0; if (st.vt >= 20 && st.at > 0) st.at = 0;
+      st.vt = clamp(st.vt + st.at * dt, 0, 20); st.xt += st.vt * dt;
+      let ab = 0; const mg = st.mu * G;
+      if (st.mu > 0) { const dv = st.vb - st.vt;
+        if (Math.abs(dv) < 0.05 && Math.abs(st.at) <= mg) { ab = st.at; st.vb = st.vt; }
+        else { ab = -Math.sign(dv) * mg; const nv = st.vb + ab * dt; if (Math.sign(nv - st.vt) !== Math.sign(dv) && dv !== 0) { st.vb = st.vt; } else st.vb = nv; } }
+      else st.vb += 0;
+      force = ab;
+      st.r += (st.vb - st.vt) * dt;
+      if (st.r > L - R) { st.r = L - R; if (st.vb > st.vt) { st.vb = st.vt; force = NaN; } }
+      if (st.r < R) { st.r = R; if (st.vb < st.vt) { st.vb = st.vt; force = NaN; } }
+      st.t += dt; st.hist.push([st.t, st.vt, st.vb]); while (st.hist.length && st.hist[0][0] < st.t - 10) st.hist.shift();
+    }
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const sh = H * 0.5, s = Math.min((w - 40) / (L + 3), sh / 4.2), x0 = (w - L * s) / 2, gy = sh - 18;
+      // 地面と電柱（地上の目印）
+      ctx.fillStyle = COL.card; ctx.fillRect(0, gy, w, sh - gy);
+      line(ctx, [[0, gy], [w, gy]], COL.ink, 2);
+      const sp = 6, off = ((st.xt % sp) + sp) % sp;
+      for (let x = -off - sp; x < w / s + sp; x += sp) { const px = x0 + (x - 1.5) * s; ctx.save(); ctx.globalAlpha = st.view === 'train' ? 0.35 : 1;
+        line(ctx, [[px, gy], [px, gy - 3.6 * s]], COL.muted, 3); line(ctx, [[px - 0.4 * s, gy - 3.3 * s], [px + 0.4 * s, gy - 3.3 * s]], COL.muted, 2); ctx.restore(); }
+      // 電車
+      const ty = gy - 0.4 * s, th = 2.6 * s;
+      ctx.fillStyle = COL.blue_soft; ctx.strokeStyle = COL.ink; ctx.lineWidth = 2.5; ctx.fillRect(x0, ty - th, L * s, th); ctx.strokeRect(x0, ty - th, L * s, th);
+      for (let i = 0; i < 4; i++) { ctx.fillStyle = COL.card; ctx.fillRect(x0 + (0.6 + i * 2.1) * s, ty - th + 0.35 * s, 1.5 * s, 0.9 * s); }
+      [1.2, L - 1.2].forEach(x => dot(ctx, x0 + x * s, ty + 0.05 * s, 0.38 * s, COL.ink));
+      line(ctx, [[x0, ty], [x0 + L * s, ty]], COL.ink, 3);
+      txt(ctx, '進行方向 →', x0 + L * s - 4, ty - th - 10, { size: 11, color: COL.muted, align: 'right' });
+      const bx = x0 + st.r * s, by = ty - R * s; dot(ctx, bx, by, R * s, COL.red, COL.ink);
+      // 速度の矢印
+      const k = Math.min(9, (w * 0.35) / 20);
+      if (st.view === 'ground') {
+        if (st.vt > 0.05) { arrow(ctx, x0 + L * s / 2 - 30, ty - th - 26, x0 + L * s / 2 - 30 + st.vt * k, ty - th - 26, COL.blue, 3, 9); txt(ctx, '電車', x0 + L * s / 2 - 36, ty - th - 26, { size: 11, bold: true, color: COL.blue, align: 'right' }); }
+        if (Math.abs(st.vb) > 0.05) arrow(ctx, bx, by - R * s - 14, bx + st.vb * k, by - R * s - 14, COL.red, 3, 9);
+      } else { const vr = st.vb - st.vt; if (Math.abs(vr) > 0.05) arrow(ctx, bx, by - R * s - 14, bx + vr * k * 2, by - R * s - 14, COL.red, 3, 9); }
+      txt(ctx, st.view === 'ground' ? '地上から見た速度' : '電車の中から見た速度（ボール）', 10, 14, { size: 11, bold: true, color: COL.ink, bg: COL.paper });
+      // v-t グラフ
+      const box = { x: 46, y: sh + 26, w: w - 62, h: H - sh - 60 };
+      const A = axes(ctx, box, [0, 10], [0, 20], { xl: 't [s]（いまが右端）', yl: '速度 [m/s]（地上から）', xstep: 2, ystep: 5 });
+      const t0 = st.t - 10, P = i => st.hist.map(r => [A.X(r[0] - t0), A.Y(r[i])]);
+      if (st.hist.length > 1) { line(ctx, P(1), COL.blue, 2.5); line(ctx, P(2), COL.red, 2.5, [6, 4]); }
+      txt(ctx, '― 電車', box.x + box.w - 120, box.y + 10, { size: 11, bold: true, color: COL.blue, bg: COL.card });
+      txt(ctx, '‐‐ ボール', box.x + box.w - 60, box.y + 10, { size: 11, bold: true, color: COL.red, bg: COL.card });
+      const fx = isNaN(force) ? '壁から押される' : Math.abs(force) < 1e-6 ? '0（はたらかない）' : (force > 0 ? '前向き' : '後ろ向き') + '（摩擦力）';
+      up({ vt: fmt(st.vt, 1) + ' m/s', vb: fmt(st.vb, 1) + ' m/s', vr: fmt(st.vb - st.vt, 1) + ' m/s', f: fx });
+    };
+    loop(b, dt => { step(dt); o.draw(); });
+  }
+};
+
+// ===== 実験：波 =====
+
+// ---------- 6 波をつくる（横波・縦波） ----------
+LABS.wavemake = {
+  title: '波をつくる（横波と縦波）',
+  tryText: '振幅・波長・振動数を変えて波を観察しよう。<b>赤い粒（●）はドラッグで場所を変えられます</b>。粒は波といっしょに進まず、その場で振動するだけです。',
+  why: '波が1回振動する間（周期 T）に、波形は<b>1波長 λ</b>だけ進みます。だから波の速さは <b>v ＝ λ/T ＝ fλ</b>。この実験では f と λ を別々に変えられますが、実際の波の速さは媒質で決まるので、同じ媒質で振動数を大きくすると波長は短くなります。縦波では媒質が<b>進行方向に</b>振動し、<b>密</b>と<b>疎</b>ができます。縦波の変位を90°回して描くと横波と同じ形のグラフで表せます。',
+  build(b, touch) {
+    const st = { A: 0.6, lam: 4, f: 0.5, mode: 'T', conv: true, dots: true, t: 0, run: true, xp: 2 };
+    const o = makeCanvas(b, w => w < 560 ? 1.0 : 0.6, { maxH: 520, label: '波のようす' });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    slider(c, { id: 'wv-A', label: '振幅 A', min: 0.2, max: 1.0, step: 0.1, value: 0.6, unit: 'm' }, v => { st.A = v; touch(); });
+    slider(c, { id: 'wv-l', label: '波長 λ', min: 1, max: 6, step: 0.5, value: 4, unit: 'm' }, v => { st.lam = v; touch(); });
+    slider(c, { id: 'wv-f', label: '振動数 f', min: 0.1, max: 1.5, step: 0.05, value: 0.5, unit: 'Hz', d: 2 }, v => { st.f = v; touch(); });
+    const bb = h('div', { class: 'btns' }); b.append(bb);
+    seg(bb, [['T', '横波'], ['L', '縦波']], 'T', v => { st.mode = v; touch(); });
+    const pb = btn(bb, '⏸ 止める', () => { st.run = !st.run; pb.textContent = st.run ? '⏸ 止める' : '▶ 動かす'; });
+    btn(bb, 'コマ送り（T/8）', () => { st.run = false; pb.textContent = '▶ 動かす'; st.t += 1 / st.f / 8; touch(); });
+    check(bb, 'wv-dt', '媒質の点を表示（横波）', true, v => { st.dots = v; touch(); });
+    check(bb, 'wv-cv', '縦波を横波で表す', true, v => { st.conv = v; });
+    const up = reads(b, [['v', '波の速さ v ＝ fλ', true], ['T', '周期 T ＝ 1/f'], ['y', '赤い粒の変位']]);
+    const XM = 12; let hist = [];
+    const y = (x, t) => st.A * Math.sin(2 * Math.PI * (st.f * t - x / st.lam));
+    let top;
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      top = { x: 40, y: 18, w: w - 56, h: H * 0.56 - 18 };
+      const X = x => top.x + x / XM * top.w, ys = top.h / 2 / 1.25, Y0 = top.y + top.h / 2, Y = v => Y0 - v * ys;
+      ctx.fillStyle = COL.card; ctx.fillRect(top.x, top.y, top.w, top.h);
+      for (let x = 0; x <= XM; x++) { line(ctx, [[X(x), top.y], [X(x), top.y + top.h]], COL.grid, 1); if (x % 2 === 0) txt(ctx, x + '', X(x), top.y + top.h + 9, { size: 9.5, color: COL.muted, align: 'center', mono: true }); }
+      txt(ctx, 'x [m]', top.x + top.w, top.y + top.h + 21, { size: 10, color: COL.muted, align: 'right' });
+      line(ctx, [[top.x, Y0], [top.x + top.w, Y0]], COL.line, 1.5);
+      const t = st.t, xi = []; for (let x = 0; x <= XM + 1e-9; x += 0.25) xi.push(x);
+      if (st.mode === 'T') {
+        const cur = []; for (let i = 0; i <= 240; i++) { const x = XM * i / 240; cur.push([X(x), Y(y(x, t))]); }
+        line(ctx, cur, COL.blue, st.dots ? 1.5 : 3);
+        if (st.dots) xi.forEach(x => dot(ctx, X(x), Y(y(x, t)), 3, COL.ink));
+      } else {
+        const xa = Math.min(0.3 * st.A, 0.12 * st.lam), xis = x => xa * Math.sin(2 * Math.PI * (st.f * t - x / st.lam));
+        for (let x = 0; x <= XM + 1e-9; x += 0.2) { const px = X(x + xis(x)); line(ctx, [[px, Y0 - top.h * 0.32], [px, Y0 + top.h * 0.32]], COL.ink, 1.6); }
+        // 密・疎
+        for (let n = -10; n <= 10; n++) { const xd = st.lam * (st.f * t - n), xs2 = xd + st.lam / 2;
+          if (xd >= 0 && xd <= XM) txt(ctx, '密', X(xd), top.y + 10, { size: 11, bold: true, color: COL.red, align: 'center' });
+          if (xs2 >= 0 && xs2 <= XM) txt(ctx, '疎', X(xs2), top.y + 10, { size: 11, bold: true, color: COL.muted, align: 'center' }); }
+        if (st.conv) { const cur = []; for (let i = 0; i <= 240; i++) { const x = XM * i / 240; cur.push([X(x), Y(xis(x) / xa * st.A)]); } line(ctx, cur, COL.blue, 2, [5, 4]);
+          txt(ctx, '右向きの変位 → 上向きに描いた横波表示', top.x + 6, top.y + top.h - 10, { size: 10, color: COL.blue, bg: COL.card }); }
+      }
+      // λ のものさし
+      if (st.mode === 'T') { let xc = null; for (let n = -12; n <= 12; n++) { const x = st.lam * (st.f * t - 0.25 - n); if (x >= 0 && x + st.lam <= XM) { xc = x; break; } }
+        if (xc != null) { const yy = Y(st.A) - 12; line(ctx, [[X(xc), yy], [X(xc + st.lam), yy]], COL.orange, 1.5); line(ctx, [[X(xc), yy - 5], [X(xc), yy + 5]], COL.orange, 1.5); line(ctx, [[X(xc + st.lam), yy - 5], [X(xc + st.lam), yy + 5]], COL.orange, 1.5);
+          txt(ctx, 'λ', X(xc + st.lam / 2), yy - 9, { size: 12, bold: true, color: COL.orange, align: 'center', bg: COL.card }); }
+        line(ctx, [[X(XM) - 4, Y0 + top.h * 0.42], [X(XM) - 4, Y0 - top.h * 0.42]], COL.muted, 1, [2, 3]);
+      }
+      arrow(ctx, top.x + top.w - 70, top.y + 12, top.x + top.w - 12, top.y + 12, COL.red, 2, 7);
+      txt(ctx, '進む向き', top.x + top.w - 74, top.y + 12, { size: 10, color: COL.red, align: 'right' });
+      // 赤い粒
+      const yp = y(st.xp, t);
+      if (st.mode === 'T') { line(ctx, [[X(st.xp), Y(st.A)], [X(st.xp), Y(-st.A)]], COL.red, 1, [2, 3]); dot(ctx, X(st.xp), Y(yp), 7.5, COL.red, COL.card); }
+      else { const xa = Math.min(0.3 * st.A, 0.12 * st.lam), xx = st.xp + xa * yp / st.A; line(ctx, [[X(xx), Y0 - top.h * 0.36], [X(xx), Y0 + top.h * 0.36]], COL.red, 3.5); dot(ctx, X(xx), Y0, 6, COL.red, COL.card); }
+      // y-t グラフ
+      const bx = { x: 40, y: top.y + top.h + 44, w: w - 56, h: H - top.y - top.h - 74 };
+      const A2 = axes(ctx, bx, [0, 6], [-1.2, 1.2], { xl: 't [s]（いまが右端）', yl: '赤い粒の変位 [m]  y-tグラフ', xstep: 1, ystep: 0.6 });
+      const cur = []; for (let i = 0; i <= 200; i++) { const tt = 6 * i / 200; cur.push([A2.X(tt), A2.Y(y(st.xp, t - 6 + tt))]); }
+      line(ctx, cur, COL.red, 2); dot(ctx, A2.X(6), A2.Y(yp), 4.5, COL.red);
+      o._X = X; o._Y0 = Y0;
+      up({ v: fmt(st.f * st.lam, 2) + ' m/s', T: fmt(1 / st.f, 2) + ' s', y: fmt(yp, 2) + ' m' });
+    };
+    draggable(o, {
+      hit: p => (top && p.y > top.y && p.y < top.y + top.h && Math.abs(p.x - o._X(st.xp)) < 20) ? 1 : null,
+      move: (_, p) => { st.xp = clamp(Math.round((p.x - top.x) / top.w * XM * 4) / 4, 0, XM); touch(); o.draw(); }
+    });
+    loop(b, dt => { if (st.run) st.t += dt * (REDUCED ? 0.4 : 1); o.draw(); });
+  }
+};
+
+// ---------- 7-A ロープを揺らす（反射と重ね合わせ） ----------
+LABS.rope = {
+  title: 'ロープを揺らす（反射）',
+  tryText: '左はしの<b>赤い手をつかんで上下にドラッグ</b>するとロープに波が送れます（ボタンでも送れます）。右はしを<b>固定端</b>・<b>自由端</b>に切りかえて、はね返ってくる波の形をくらべよう。',
+  why: '<b>固定端</b>では、山は<b>谷になって</b>はね返ります（位相が π ずれる）。<b>自由端</b>では山は<b>山のまま</b>はね返ります。入ってくる波（入射波）と反射波が重なっている所では、ロープの変位は<b>2つの変位の和</b>になります（重ね合わせの原理）。連続で揺らすと、入射波と反射波が重なって<b>定常波</b>ができます。',
+  build(b, touch) {
+    const L = 10, v = 2.5; const st = { end: 'fixed', parts: false, hold: false, hy: 0, auto: null, t: 0, cont: false };
+    let buf = [[0, 0]];
+    const o = makeCanvas(b, w => w < 560 ? 0.75 : 0.42, { maxH: 380, label: 'ロープの波' });
+    const c = h('div', { class: 'btns' }); b.append(c);
+    seg(c, [['fixed', '固定端'], ['free', '自由端'], ['none', '反射なし']], 'fixed', x => { st.end = x; touch(); });
+    const c2 = h('div', { class: 'btns' }); b.append(c2);
+    btn(c2, '山を1つ送る', () => { st.used = true; st.auto = { t0: st.t, A: 0.8 }; touch(); }, true);
+    btn(c2, '谷を1つ送る', () => { st.auto = { t0: st.t, A: -0.8 }; touch(); });
+    const cb = btn(c2, '連続で揺らす', () => { st.cont = !st.cont; cb.textContent = st.cont ? '揺らすのをやめる' : '連続で揺らす'; touch(); });
+    check(c2, 'rp-pt', '入射波と反射波を分けて表示', false, x => { st.parts = x; });
+    function sAt(t) { if (t <= buf[0][0]) return 0; let lo = 0, hi = buf.length - 1; if (t >= buf[hi][0]) return buf[hi][1];
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (buf[m][0] <= t) lo = m; else hi = m; } const f = (t - buf[lo][0]) / (buf[hi][0] - buf[lo][0]); return buf[lo][1] + (buf[hi][1] - buf[lo][1]) * f; }
+    const R = () => st.end === 'fixed' ? -1 : st.end === 'free' ? 1 : 0;
+    let X, Y, x0, x1, yc, ys;
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      x0 = 46; x1 = w - 40; yc = H / 2; ys = (H / 2 - 22) / 1.3;
+      X = x => x0 + x / L * (x1 - x0); Y = y => yc - y * ys;
+      line(ctx, [[x0, yc], [x1, yc]], COL.line, 1, [3, 4]);
+      const inc = [], ref = [], tot = [];
+      for (let i = 0; i <= 300; i++) { const x = L * i / 300, a = sAt(st.t - x / v), r = R() * sAt(st.t - (2 * L - x) / v);
+        inc.push([X(x), Y(a)]); ref.push([X(x), Y(r)]); tot.push([X(x), Y(a + r)]); }
+      if (st.parts) { line(ctx, inc, COL.blue, 1.8, [6, 4]); line(ctx, ref, COL.orange, 1.8, [6, 4]);
+        txt(ctx, '入射波', 8, 14, { size: 11, bold: true, color: COL.blue }); txt(ctx, '反射波', 64, 14, { size: 11, bold: true, color: COL.orange }); }
+      line(ctx, tot, COL.ink, 4);
+      // 右はし
+      const ye = tot[tot.length - 1][1];
+      if (st.end === 'fixed') { ctx.fillStyle = COL.line; ctx.fillRect(x1, 10, 14, H - 20); line(ctx, [[x1, 10], [x1, H - 10]], COL.ink, 2); dot(ctx, x1, yc, 5, COL.ink); }
+      else if (st.end === 'free') { line(ctx, [[x1 + 4, 10], [x1 + 4, H - 10]], COL.ink, 3); ctx.save(); ctx.strokeStyle = COL.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(x1 + 4, ye, 8, 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+      else { ctx.save(); ctx.globalAlpha = 0.5; line(ctx, [[x1, ye], [w, ye]], COL.ink, 4); ctx.restore(); txt(ctx, 'その先へ続く', x1 - 4, H - 12, { size: 10, color: COL.muted, align: 'right' }); }
+      // 手
+      const yh = Y(sAt(st.t)); line(ctx, [[x0 - 30, yh], [x0, yh]], COL.red, 3); dot(ctx, x0 - 14, yh, 11, COL.red_soft, COL.red);
+      if (!st.used) txt(ctx, '↕ つかんで動かす', x0 + 6, yh - 22, { size: 11, bold: true, color: COL.red, bg: COL.paper });
+    };
+    draggable(o, {
+      hit: p => p.x < o.w * 0.35 ? 1 : null,
+      down: (_, p) => { st.used = true; st.hold = true; st.cont = false; cb.textContent = '連続で揺らす'; st.auto = null; st.hy = clamp((yc - p.y) / ys, -1.2, 1.2); touch(); },
+      move: (_, p) => { st.hy = clamp((yc - p.y) / ys, -1.2, 1.2); },
+      up: () => { st.hold = false; }
+    });
+    loop(b, dt => {
+      st.t += dt; let s;
+      if (st.hold) s = st.hy;
+      else if (st.cont) s = 0.6 * Math.sin(2 * Math.PI * 0.5 * st.t);
+      else if (st.auto) { const tt = st.t - st.auto.t0; s = tt < 0.8 ? st.auto.A * Math.sin(Math.PI * tt / 0.8) : 0; if (tt >= 0.8) st.auto = null; }
+      else { const last = buf[buf.length - 1][1]; s = Math.abs(last) < 0.01 ? 0 : last * Math.exp(-dt * 6); }
+      buf.push([st.t, s]); const keep = st.t - (2 * L / v + 1); while (buf.length > 2 && buf[1][0] < keep) buf.shift();
+      o.draw();
+    });
+  }
+};
+
+// ---------- 7-B 定常波 ----------
+LABS.standing = {
+  title: '定常波（2つの波の重ね合わせ）',
+  tryText: '右に進む波（青）と左に進む波（橙）が重なると、赤い<b>合成波</b>は左右に進まず、その場で振動します。「コマ送り」で T/8 ずつ進めて確かめよう。',
+  why: '同じ振幅・波長・振動数の波が逆向きに進んで重なると<b>定常波</b>ができます。まったく振動しない点が<b>節</b>、最も大きく振動する点が<b>腹</b>。節と節（腹と腹）の間隔は <b>λ/2</b>、節と隣の腹の間隔は <b>λ/4</b>。腹の振幅はもとの波の<b>2倍（2A）</b>です。',
+  build(b, touch) {
+    const st = { t: 0, run: true, w1: true, w2: true, mk: true }; const lam = 4, A = 0.5, T = 4, XM = 12;
+    const o = makeCanvas(b, w => w < 560 ? 0.75 : 0.42, { maxH: 380, label: '定常波', scrollable: true });
+    const c = h('div', { class: 'btns' }); b.append(c);
+    const pb = btn(c, '⏸ 止める', () => { st.run = !st.run; pb.textContent = st.run ? '⏸ 止める' : '▶ 動かす'; }, true);
+    btn(c, 'コマ送り（T/8）', () => { st.run = false; pb.textContent = '▶ 動かす'; st.t = (Math.round(st.t / (T / 8)) + 1) * (T / 8); touch(); });
+    check(c, 'st-1', '右へ進む波', true, v => { st.w1 = v; touch(); });
+    check(c, 'st-2', '左へ進む波', true, v => { st.w2 = v; touch(); });
+    check(c, 'st-m', '節・腹のしるし', true, v => { st.mk = v; });
+    const up = reads(b, [['t', '時刻'], ['ab', '腹の振幅', true], ['nn', '節の間隔']]);
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const x0 = 30, x1 = w - 20, yc = H / 2 - 6, ys = (H / 2 - 30) / 1.1, X = x => x0 + x / XM * (x1 - x0), Y = y => yc - y * ys;
+      for (let x = 0; x <= XM; x++) line(ctx, [[X(x), 14], [X(x), H - 26]], COL.grid, 1);
+      for (let x = 0; x <= XM; x += 2) txt(ctx, x + ' m', X(x), H - 14, { size: 9.5, color: COL.muted, align: 'center', mono: true });
+      line(ctx, [[x0, yc], [x1, yc]], COL.line, 1.5);
+      const t = st.t, f1 = x => st.w1 ? A * Math.sin(2 * Math.PI * (t / T - x / lam)) : 0, f2 = x => st.w2 ? A * Math.sin(2 * Math.PI * (t / T + x / lam)) : 0;
+      const g = (f) => { const p = []; for (let i = 0; i <= 300; i++) { const x = XM * i / 300; p.push([X(x), Y(f(x))]); } return p; };
+      if (st.w1 && st.w2) { line(ctx, g(x => 2 * A * Math.cos(2 * Math.PI * x / lam)), COL.muted, 1, [2, 4]); line(ctx, g(x => -2 * A * Math.cos(2 * Math.PI * x / lam)), COL.muted, 1, [2, 4]); }
+      if (st.w1) line(ctx, g(f1), COL.blue, 1.8);
+      if (st.w2) line(ctx, g(f2), COL.orange, 1.8);
+      line(ctx, g(x => f1(x) + f2(x)), COL.red, 3.5);
+      if (st.mk && st.w1 && st.w2) {
+        for (let x = 1; x <= XM; x += 2) { dot(ctx, X(x), yc, 5, COL.card, COL.ink); txt(ctx, '節', X(x), yc + 16, { size: 10.5, bold: true, align: 'center', bg: COL.paper }); }
+        for (let x = 0; x <= XM; x += 2) txt(ctx, '腹', X(x), 14, { size: 10.5, bold: true, color: COL.red, align: 'center' });
+      }
+      const k = Math.round(st.t / (T / 8)), exact = Math.abs(st.t - k * T / 8) < 1e-6;
+      up({ t: exact ? `${k % 8}/8 T（${Math.floor(k / 8)}周期め）` : fmt((st.t % T) / T, 2) + ' T', ab: (st.w1 && st.w2) ? '2A ＝ ' + fmt(2 * A, 1) + ' m' : '—', nn: (st.w1 && st.w2) ? 'λ/2 ＝ ' + fmt(lam / 2, 1) + ' m' : '—' });
+    };
+    loop(b, dt => { if (st.run) st.t += dt * (REDUCED ? 0.4 : 1); o.draw(); });
+  }
+};
+
+// ---------- 8-A 弦の固有振動 ----------
+LABS.string = {
+  title: '弦の固有振動（音を鳴らす）',
+  tryText: '弦の長さ・波の速さ・振動の形（倍振動）を選んで<b>「音を鳴らす」</b>。弦を短くしたり、倍振動にしたりすると音がどう変わるかな？',
+  why: '両はしが固定された弦には、両はしが<b>節</b>になる定常波だけができます。n 倍振動のとき <b>L ＝ n × λ/2</b> なので <b>λ ＝ 2L/n</b>、振動数は <b>f ＝ v/λ ＝ nv/(2L)</b>。弦が短いほど、また弦を強く張って v が大きいほど、高い音になります。基本振動の2倍・3倍…の振動数の音（倍音）が出せます。',
+  build(b, touch) {
+    const st = { L: 0.6, v: 240, n: 1, t: 0 };
+    const o = makeCanvas(b, w => w < 560 ? 0.55 : 0.3, { maxH: 280, minH: 170, label: '弦の振動', scrollable: true });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    slider(c, { id: 'str-L', label: '弦の長さ L', min: 0.3, max: 1.0, step: 0.05, value: 0.6, unit: 'm', d: 2 }, v => { st.L = v; touch(); });
+    slider(c, { id: 'str-v', label: '弦を伝わる波の速さ v', min: 100, max: 400, step: 10, value: 240, unit: 'm/s', d: 0 }, v => { st.v = v; touch(); });
+    const bb = h('div', { class: 'btns' }); b.append(bb);
+    seg(bb, [[1, '基本振動'], [2, '2倍'], [3, '3倍'], [4, '4倍'], [5, '5倍']], 1, v => { st.n = v; touch(); });
+    const b2 = h('div', { class: 'btns' }); b.append(b2);
+    btn(b2, '🔊 音を鳴らす', () => { tone([st.n * st.v / (2 * st.L)], 1.4, 'triangle'); touch(); }, true);
+    btn(b2, '🔊 基本〜5倍振動を順に', () => { touch(); for (let n = 1; n <= 5; n++) setTimeout(() => tone([n * st.v / (2 * st.L)], 0.55, 'triangle'), (n - 1) * 600); });
+    const up = reads(b, [['lam', '波長 λ ＝ 2L/n'], ['f', '振動数 f ＝ nv/(2L)', true]]);
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const s = (w - 60) / 1.0, x0 = 30, x1 = x0 + st.L * s, yc = H / 2, amp = H * 0.3;
+      ctx.fillStyle = COL.card; ctx.fillRect(x0 - 10, yc - amp - 20, s + 20, 2 * amp + 40);
+      for (let i = 0; i <= 10; i++) { const x = x0 + i * 0.1 * s; line(ctx, [[x, H - 16], [x, H - 10]], COL.muted, 1); if (i % 2 === 0) txt(ctx, fmt(i * 0.1, 1), x, H - 4, { size: 9, color: COL.muted, align: 'center', mono: true }); }
+      const env = (x, sg) => [x0 + x * s, yc - sg * amp * Math.sin(st.n * Math.PI * x / st.L)];
+      const e1 = [], e2 = [], cur = [], ph = Math.cos(2 * Math.PI * 1.1 * st.t);
+      for (let i = 0; i <= 200; i++) { const x = st.L * i / 200; e1.push(env(x, 1)); e2.push(env(x, -1)); cur.push(env(x, ph)); }
+      line(ctx, e1, COL.muted, 1, [3, 4]); line(ctx, e2, COL.muted, 1, [3, 4]);
+      line(ctx, cur, COL.red, 3);
+      [x0, x1].forEach(x => { ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.moveTo(x, yc); ctx.lineTo(x - 7, yc + 16); ctx.lineTo(x + 7, yc + 16); ctx.closePath(); ctx.fill(); });
+      for (let k = 1; k < st.n; k++) dot(ctx, x0 + k * st.L / st.n * s, yc, 4, COL.ink);
+      txt(ctx, 'L ＝ ' + fmt(st.L, 2) + ' m', (x0 + x1) / 2, yc + amp + 12, { size: 11, bold: true, align: 'center', mono: true });
+      up({ lam: fmt(2 * st.L / st.n, 2) + ' m', f: fmt(st.n * st.v / (2 * st.L), 0) + ' Hz' });
+    };
+    loop(b, dt => { st.t += dt; o.draw(); });
+  }
+};
+
+// ---------- 8-B 気柱の共鳴 ----------
+LABS.pipe = {
+  title: '気柱の共鳴（閉管と開管）',
+  tryText: '閉管と開管を切りかえ、管の長さや振動の形を変えて<b>「音を鳴らす」</b>。管の中の空気の<b>振動のようす（縦波）</b>と、節・腹の位置を見よう。',
+  why: '管の<b>閉じたはしは節</b>、<b>開いたはしは腹</b>になります（ここでは開口端補正は考えません）。<b>閉管</b>は L ＝ λ/4, 3λ/4, 5λ/4 … なので <b>f ＝ nV/(4L)（n は奇数）</b>で、偶数倍の振動はできません。<b>開管</b>は L ＝ λ/2, λ, 3λ/2 … なので <b>f ＝ nV/(2L)</b>。同じ長さなら開管の基本振動数は閉管の2倍です。音速 V は気温 t［℃］で <b>V ＝ 331.5 ＋ 0.6t</b>。',
+  build(b, touch) {
+    const st = { type: 'closed', L: 0.5, tc: 20, m: 1, t: 0 };
+    const o = makeCanvas(b, w => w < 560 ? 0.6 : 0.32, { maxH: 300, minH: 180, label: '気柱の振動', scrollable: true });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    slider(c, { id: 'pp-L', label: '管の長さ L', min: 0.2, max: 1.0, step: 0.05, value: 0.5, unit: 'm', d: 2 }, v => { st.L = v; touch(); });
+    slider(c, { id: 'pp-t', label: '気温 t', min: 0, max: 35, step: 1, value: 20, unit: '℃', d: 0 }, v => { st.tc = v; touch(); });
+    const bb = h('div', { class: 'btns' }); b.append(bb);
+    seg(bb, [['closed', '閉管'], ['open', '開管']], 'closed', v => { st.type = v; touch(); });
+    const mseg = seg(bb, [[1, '1番目'], [2, '2番目'], [3, '3番目'], [4, '4番目']], 1, v => { st.m = v; touch(); });
+    const b2 = h('div', { class: 'btns' }); b.append(b2);
+    btn(b2, '🔊 音を鳴らす', () => { tone([F()], 1.4, 'sine'); touch(); }, true);
+    const up = reads(b, [['V', '音速 V'], ['n', '振動のようす'], ['lam', '波長 λ'], ['f', '振動数 f', true]]);
+    const V = () => 331.5 + 0.6 * st.tc, N = () => st.type === 'closed' ? 2 * st.m - 1 : st.m;
+    const F = () => st.type === 'closed' ? N() * V() / (4 * st.L) : N() * V() / (2 * st.L);
+    o.draw = () => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const s = (w - 70) / 1.0, x0 = 40, x1 = x0 + st.L * s, yc = H / 2 - 4, hh = Math.min(H * 0.32, 62);
+      const amp = x => st.type === 'closed' ? Math.sin(N() * Math.PI * x / (2 * st.L)) : Math.cos(N() * Math.PI * x / st.L);
+      ctx.fillStyle = COL.card; ctx.fillRect(x0, yc - hh, x1 - x0, 2 * hh);
+      ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = COL.blue_soft; ctx.beginPath();
+      for (let i = 0; i <= 200; i++) { const x = st.L * i / 200; ctx.lineTo(x0 + x * s, yc - Math.abs(amp(x)) * hh * 0.85); }
+      for (let i = 200; i >= 0; i--) { const x = st.L * i / 200; ctx.lineTo(x0 + x * s, yc + Math.abs(amp(x)) * hh * 0.85); }
+      ctx.closePath(); ctx.fill(); ctx.restore();
+      const eu = [], ed = []; for (let i = 0; i <= 200; i++) { const x = st.L * i / 200; eu.push([x0 + x * s, yc - Math.abs(amp(x)) * hh * 0.85]); ed.push([x0 + x * s, yc + Math.abs(amp(x)) * hh * 0.85]); }
+      line(ctx, eu, COL.blue, 2); line(ctx, ed, COL.blue, 2);
+      const ph = Math.cos(2 * Math.PI * 0.9 * st.t), xa = Math.min(0.03, st.L / (N() * 8));
+      for (let x = 0.01; x < st.L; x += 0.02) for (let r = -2; r <= 2; r++) { const xx = x + xa * amp(x) * ph; if (xx > 0 && xx < st.L) dot(ctx, x0 + xx * s, yc + r * hh * 0.36, 2, COL.ink); }
+      line(ctx, [[x0, yc - hh], [x1, yc - hh]], COL.ink, 3); line(ctx, [[x0, yc + hh], [x1, yc + hh]], COL.ink, 3);
+      if (st.type === 'closed') line(ctx, [[x0, yc - hh], [x0, yc + hh]], COL.ink, 6);
+      // 節・腹
+      for (let i = 0; i <= 400; i++) { const x = st.L * i / 400, a = Math.abs(amp(x));
+        if (a < 0.008) txt(ctx, '節', x0 + x * s, yc + hh + 14, { size: 11, bold: true, align: 'center' });
+        if (a > 0.9999) txt(ctx, '腹', x0 + x * s, yc - hh - 12, { size: 11, bold: true, color: COL.red, align: 'center' }); }
+      txt(ctx, st.type === 'closed' ? '閉じたはし' : '開いたはし', x0, H - 6, { size: 10, color: COL.muted, align: 'left' });
+      txt(ctx, '開いたはし', x1 - x0 > 130 ? x1 : x1 + 6, H - 6, { size: 10, color: COL.muted, align: x1 - x0 > 130 ? 'right' : 'left' });
+      up({ V: fmt(V(), 1) + ' m/s', n: N() + '倍振動' + (N() === 1 ? '（基本振動）' : ''), lam: fmt(V() / F(), 3) + ' m', f: fmt(F(), 0) + ' Hz' });
+    };
+    loop(b, dt => { st.t += dt; o.draw(); });
+  }
+};
+
+// ---------- 8-C うなり ----------
+LABS.beat = {
+  title: 'うなり（2つの音の重ね合わせ）',
+  tryText: '2つのおんさの振動数を少しだけずらして<b>「2つ同時に鳴らす」</b>。音が「ウォン、ウォン」と大きくなったり小さくなったりします。1秒間に何回か数えてみよう。',
+  why: '振動数が少しちがう2つの音を重ねると、山と山が強め合う時と、山と谷が打ち消し合う時がくり返し訪れます。この音の強弱のくり返しが<b>うなり</b>で、1秒あたりの回数は <b>|f₁ − f₂|</b>。楽器のチューニングでは、うなりが消える（0回になる）ように合わせます。',
+  build(b, touch) {
+    const st = { f1: 440, f2: 443, play: -1 };
+    const o = makeCanvas(b, w => w < 560 ? 0.62 : 0.34, { maxH: 300, minH: 180, label: 'うなりの波形', scrollable: true });
+    const c = h('div', { class: 'ctrls' }); b.append(c);
+    slider(c, { id: 'bt-1', label: 'おんさ1 の振動数 f₁', min: 430, max: 450, step: 1, value: 440, unit: 'Hz', d: 0 }, v => { st.f1 = v; touch(); });
+    slider(c, { id: 'bt-2', label: 'おんさ2 の振動数 f₂', min: 430, max: 450, step: 1, value: 443, unit: 'Hz', d: 0 }, v => { st.f2 = v; touch(); });
+    const bb = h('div', { class: 'btns' }); b.append(bb);
+    btn(bb, '🔊 2つ同時に鳴らす（4秒）', () => { tone([st.f1, st.f2], 4, 'sine'); st.play = performance.now() / 1000; touch(); }, true);
+    btn(bb, '🔊 おんさ1だけ', () => { tone([st.f1], 1.5); });
+    btn(bb, '🔊 おんさ2だけ', () => { tone([st.f2], 1.5); });
+    const up = reads(b, [['d', 'うなりの回数 |f₁−f₂|', true], ['T', 'うなりの周期']]);
+    o.draw = (now) => {
+      const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+      const box = { x: 36, y: 22, w: w - 50, h: H - 56 };
+      const A = axes(ctx, box, [0, 1], [-2.2, 2.2], { xl: '時間 [s]', yl: '2つの音を重ねた波形', xstep: 0.2, ystep: 1 });
+      ctx.strokeStyle = COL.blue; ctx.lineWidth = 1; ctx.beginPath();
+      const px = Math.floor(box.w);
+      for (let i = 0; i < px; i++) { const ta = i / px, tb = (i + 1) / px; let mn = 9, mx = -9;
+        for (let k = 0; k <= 24; k++) { const t = ta + (tb - ta) * k / 24, y = Math.sin(2 * Math.PI * st.f1 * t) + Math.sin(2 * Math.PI * st.f2 * t); mn = Math.min(mn, y); mx = Math.max(mx, y); }
+        ctx.moveTo(box.x + i + 0.5, A.Y(mx)); ctx.lineTo(box.x + i + 0.5, A.Y(mn)); }
+      ctx.stroke();
+      const d = Math.abs(st.f1 - st.f2);
+      const env = []; for (let i = 0; i <= 300; i++) { const t = i / 300; env.push([A.X(t), A.Y(Math.abs(2 * Math.cos(Math.PI * d * t)))]); }
+      line(ctx, env, COL.red, 2, [5, 3]);
+      if (d > 0) for (let k = 0; k <= d; k++) { const t = (k + 0.5) / d; if (t < 1) dot(ctx, A.X(t), A.Y(0), 3.5, COL.orange); }
+      if (st.play > 0 && now != null) { const el = now - st.play; if (el < 4) { const t = el % 1; line(ctx, [[A.X(t), box.y], [A.X(t), box.y + box.h]], COL.ink, 1.5); } }
+      up({ d: d + ' 回/秒', T: d ? fmt(1 / d, 2) + ' s' : 'うなりなし' });
+    };
+    loop(b, (dt, now) => { o.draw(now); });
+  }
+};
+
+// ---------- ホームの波（ヒーロー） ----------
+function heroWave(parent) {
+  const st = { A: 0.55, lam: 0.33, t: 0, tx: 0.55, tl: 0.33 };
+  const o = makeCanvas(parent, w => w < 560 ? 0.62 : 0.56, { maxH: 320, minH: 180, label: '指やマウスで動かせる波' });
+  const cap = h('span', { class: 'cap' }, 'なぞってみよう：左右で波長、上下で振幅が変わる'); parent.append(cap);
+  o.cv.addEventListener('pointermove', e => { const p = ptr(o.cv, e); st.tl = 0.12 + 0.5 * p.x / o.w; st.tx = clamp(1 - p.y / o.h, 0.1, 0.95); });
+  o.cv.style.touchAction = 'pan-y';
+  o.draw = () => {
+    const { ctx, w, h: H } = o; ctx.clearRect(0, 0, w, H);
+    const yc = H / 2, n = 34;
+    for (let i = 1; i < 8; i++) line(ctx, [[0, H * i / 8], [w, H * i / 8]], COL.grid, 1);
+    line(ctx, [[0, yc], [w, yc]], COL.line, 1.5);
+    const y = x => st.A * (H * 0.42) * Math.sin(2 * Math.PI * (x / (st.lam * w) - st.t * 0.5));
+    const cur = []; for (let i = 0; i <= 200; i++) { const x = w * i / 200; cur.push([x, yc - y(x)]); } line(ctx, cur, COL.blue, 2);
+    for (let i = 0; i <= n; i++) { const x = w * i / n; dot(ctx, x, yc - y(x), i === 12 ? 7 : 3.5, i === 12 ? COL.red : COL.ink); }
+    line(ctx, [[w * 12 / n, yc - st.A * H * 0.42], [w * 12 / n, yc + st.A * H * 0.42]], COL.red, 1, [2, 3]);
+  };
+  loop(parent, dt => { st.t += dt * (REDUCED ? 0.3 : 1); st.A += (st.tx - st.A) * 0.08; st.lam += (st.tl - st.lam) * 0.08; o.draw(); });
+}
+
+// ===== 記録 =====
+const KEY = 'butsuri-kiso-lab-v1';
+let S = { labs: {}, qs: {} };
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+const LAB_IDS = UNITS.flatMap(u => u.labs);
+const LAB_NO = {}; UNITS.forEach(u => u.labs.forEach((l, i) => LAB_NO[l] = u.no + '-' + 'ABC'[i]));
+function rate() { const done = LAB_IDS.filter(l => S.labs[l]).length + QS.filter(q => S.qs[q.id] && S.qs[q.id].ever).length; return Math.round(done / (LAB_IDS.length + QS.length) * 100); }
+function rankOf(r) { let n = RANKS[0][1]; RANKS.forEach(([t, name]) => { if (r >= t) n = name; }); return n; }
+let lastRank = null;
+function updateRank() {
+  const r = rate(), n = rankOf(r);
+  $('#rankRate').textContent = r; $('#rankBar').style.width = r + '%'; $('#rankName').textContent = n;
+  if (lastRank && n !== lastRank) toast('ランクアップ！ 「' + n + '」になりました');
+  lastRank = n;
+}
+function unitProg(u) { const qs = QS.filter(q => q.u === u.id); const tot = u.labs.length + qs.length;
+  const d = u.labs.filter(l => S.labs[l]).length + qs.filter(q => S.qs[q.id] && S.qs[q.id].ever).length; return [d, tot]; }
+
+// ===== ルーター =====
+let page = 'home';
+function go(p, push = true) {
+  if (!p) p = 'home';
+  const valid = ['home', 'motion', 'wave', 'drill', 'cards', 'glossary', 'guide', ...UNITS.map(u => u.id)];
+  if (!valid.includes(p)) p = 'home';
+  page = p;
+  if (push) { try { history.pushState(null, '', '#' + p); } catch (e) {} }
+  render(); try { window.scrollTo(0, 0); } catch (e) {}
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-go]'); if (!a) return;
+  e.preventDefault(); go(a.getAttribute('data-go'));
+});
+addEventListener('hashchange', () => { const p = (location.hash || '').slice(1); if (p && p !== page) go(p, false); });
+addEventListener('popstate', () => { const p = (location.hash || '').slice(1) || 'home'; if (p !== page) go(p, false); });
+
+function render() {
+  const app = $('#app'); app.innerHTML = '';
+  const tab = UNITS.find(u => u.id === page) ? UNITS.find(u => u.id === page).part : page;
+  document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('on', a.getAttribute('data-go') === tab));
+  const fn = { home: pHome, motion: pPart('motion'), wave: pPart('wave'), drill: pDrill, cards: pCards, glossary: pGloss, guide: pGuide }[page];
+  if (fn) fn(app); else pUnitRender(UNITS.find(u => u.id === page), app);
+  updateRank();
+  try { document.title = page === 'home' ? '物理基礎 ラボ' : ($('#app h1') ? $('#app h1').textContent + '｜物理基礎 ラボ' : '物理基礎 ラボ'); } catch (e) {}
+}
+
+// ===== ページ：ホーム =====
+function unitCard(u) {
+  const [d, t] = unitProg(u);
+  return h('a', { class: 'ucard', href: '#' + u.id, 'data-go': u.id },
+    h('span', { class: 'no' }, 'UNIT ' + u.no),
+    h('h3', null, u.title),
+    h('ul', null, u.labs.map(l => h('li', null, LABS[l].title))),
+    h('div', { class: 'pg' }, h('div', { class: 'bar' }, h('i', { style: `width:${d / t * 100}%` })), h('span', { class: 'num' }, d + '/' + t)));
+}
+function partBlock(key) {
+  const P = PARTS[key];
+  return [h('div', { class: 'part' }, h('span', { class: 'tag' }, P.tag), h('h2', null, P.name), h('p', null, P.lead)),
+    h('div', { class: 'units' }, UNITS.filter(u => u.part === key).map(unitCard))];
+}
+function pHome(app) {
+  const right = h('div', { class: 'hero-cv' });
+  app.append(h('section', { class: 'hero' },
+    h('div', null,
+      h('h1', null, '動かしてわかる', h('br'), h('em', null, '物理基礎')),
+      h('p', { class: 'lead' }, '「力と運動」と「波」を、ドラッグやスライダーで実際に動かしながら学ぶ自習サイトです。グラフや矢印がどう変わるかを自分の手で確かめてから、確認問題にチャレンジしよう。'),
+      say('はじめまして、ハコ博士じゃ。物理の問題に出てくる「物体」はたいてい箱の形をしておる。わしと一緒に、式の意味を手ざわりで覚えていくのじゃ！'),
+      h('div', { class: 'btns' }, h('a', { class: 'btn pri', href: '#u1', 'data-go': 'u1', style: 'text-decoration:none' }, 'UNIT 1 から始める'), h('a', { class: 'btn', href: '#guide', 'data-go': 'guide', style: 'text-decoration:none' }, '使い方ガイドを見る'))),
+    right));
+  heroWave(right);
+  app.append(...partBlock('motion'), ...partBlock('wave'));
+  app.append(h('div', { class: 'part' }, h('span', { class: 'tag' }, 'TOOLS'), h('h2', null, 'まとめて確認')),
+    h('div', { class: 'tools' },
+      h('a', { class: 'tool', href: '#drill', 'data-go': 'drill' }, h('span', { class: 'ic' }, 'Q'), h('div', null, h('b', null, '問題演習'), h('span', null, `全${QS.length}問・単元や難易度でしぼりこみ`))),
+      h('a', { class: 'tool', href: '#cards', 'data-go': 'cards' }, h('span', { class: 'ic' }, 'ƒ'), h('div', null, h('b', null, '公式カード'), h('span', null, `${CARDS.length}枚・タップでめくって暗記`))),
+      h('a', { class: 'tool', href: '#glossary', 'data-go': 'glossary' }, h('span', { class: 'ic' }, 'あ'), h('div', null, h('b', null, '用語集'), h('span', null, `${GLOSS.length}語・五十音順で検索`)))));
+}
+function pPart(key) {
+  return app => {
+    const P = PARTS[key];
+    app.append(h('div', { class: 'crumb' }, h('a', { href: '#home', 'data-go': 'home' }, 'ホーム'), ' › ', P.name),
+      h('div', { class: 'uh' }, h('span', { class: 'no' }, P.tag), h('h1', null, P.name)),
+      say(key === 'motion' ? '台車、ボール、箱、ジェットコースター。身近なものの動きを、速度・力・エネルギーの3つの見方で調べていくぞ。' : 'ロープの波から音まで。波は目に見えにくいから、ここでは止めたり、コマ送りしたり、音を鳴らしたりして確かめるのじゃ。'),
+      h('div', { class: 'units' }, UNITS.filter(u => u.part === key).map(unitCard)));
+    UNITS.filter(u => u.part === key).forEach(u => {
+      app.append(h('h2', { class: 'sec-t' }, 'UNIT ' + u.no + '　' + u.title));
+      const box = h('div', { class: 'points' }); u.points.forEach(([t, f]) => box.append(h('div', { class: 'pt' }, h('p', null, t), h('span', { class: 'fx' }, f)))); app.append(box);
+    });
+  };
+}
+
+// ===== ページ：単元 =====
+function pUnitRender(u, app) {
+  const P = PARTS[u.part];
+  app.append(h('div', { class: 'crumb' }, h('a', { href: '#home', 'data-go': 'home' }, 'ホーム'), ' › ', h('a', { href: '#' + u.part, 'data-go': u.part }, P.name), ' › UNIT ' + u.no),
+    h('div', { class: 'uh' }, h('span', { class: 'no' }, 'UNIT ' + u.no), h('h1', null, u.title)), say(u.say));
+  app.append(h('h2', { class: 'sec-t' }, '要点'));
+  const box = h('div', { class: 'points' }); u.points.forEach(([t, f]) => box.append(h('div', { class: 'pt' }, h('p', null, t), h('span', { class: 'fx' }, f)))); app.append(box);
+  app.append(h('h2', { class: 'sec-t' }, '実験'));
+  u.labs.forEach(id => {
+    const L = LABS[id];
+    const st = h('span', { class: 'done' + (S.labs[id] ? ' on' : '') }, S.labs[id] ? '✓ 体験ずみ' : '未体験');
+    const body = h('div', { class: 'lab-b' });
+    const lab = h('section', { class: 'lab', id: 'lab-' + id }, h('div', { class: 'lab-h' }, h('span', { class: 'lt' }, '実験 ' + LAB_NO[id]), h('h3', null, L.title), st), body);
+    app.append(lab);
+    body.append(h('p', { class: 'try', html: '<b>やってみよう：</b>' + L.tryText }));
+    const touch = () => { if (S.labs[id]) return; S.labs[id] = true; save(); st.textContent = '✓ 体験ずみ'; st.classList.add('on'); updateRank(); };
+    try { L.build(body, touch); } catch (err) { body.append(h('p', null, 'この実験の読み込みでエラーが起きました：' + err.message)); console.error(err); }
+    const d = h('details', { class: 'why' }, h('summary', null, 'ハコ博士の解説を読む'), say(L.why));
+    body.append(d);
+  });
+  const qs = QS.filter(q => q.u === u.id);
+  app.append(h('h2', { class: 'sec-t' }, '確認問題'));
+  app.append(h('p', { class: 'count' }, `${qs.length}問。選択肢の番号（⓪①②③）を選ぶと、すぐに正解と解説が出ます。`));
+  app.append(h('div', { class: 'qlist' }, qs.map((q, i) => qCard(q, i + 1))));
+  const i = UNITS.indexOf(u), pv = UNITS[i - 1], nx = UNITS[i + 1];
+  app.append(h('div', { class: 'pager' },
+    pv ? h('a', { href: '#' + pv.id, 'data-go': pv.id }, h('small', null, '← 前の単元'), 'UNIT ' + pv.no + '　' + pv.title) : h('span'),
+    nx ? h('a', { class: 'nx', href: '#' + nx.id, 'data-go': nx.id }, h('small', null, '次の単元 →'), 'UNIT ' + nx.no + '　' + nx.title) : h('a', { class: 'nx', href: '#drill', 'data-go': 'drill' }, h('small', null, '仕上げ →'), '問題演習へ')));
+}
+
+// ===== 問題カード =====
+const MK = ['⓪', '①', '②', '③'];
+function qCard(q, n) {
+  const rec = S.qs[q.id];
+  const st = h('span', { class: 'st' + (rec ? (rec.ok ? ' ok' : ' ng') : '') }, rec ? (rec.ok ? '前回 正解' : '前回 不正解') : '未回答');
+  const unit = UNITS.find(u => u.id === q.u);
+  const box = h('div', { class: 'q' },
+    h('div', { class: 'q-h' }, h('span', null, (n ? '問' + n + '　' : '') + 'UNIT ' + unit.no + ' ' + unit.title), h('span', { class: 'lv', title: '難易度' }, '★'.repeat(q.lv) + '☆'.repeat(3 - q.lv)), st),
+    h('p', { class: 'qt' }, q.q));
+  const chs = h('div', { class: 'chs' }); box.append(chs);
+  let answered = false;
+  const bs = q.ch.map((c, i) => {
+    const b = h('button', { type: 'button', class: 'ch' }, h('span', { class: 'mk' }, String(i)), h('span', null, c));
+    b.addEventListener('click', () => {
+      if (answered) return; answered = true;
+      const ok = i === q.a;
+      b.classList.add('sel', ok ? 'right' : 'wrong'); bs[q.a].classList.add('right');
+      const prev = S.qs[q.id] || {}; S.qs[q.id] = { ok, ever: !!(prev.ever || ok), n: (prev.n || 0) + 1 }; save(); updateRank();
+      st.textContent = ok ? '正解！' : '不正解'; st.className = 'st ' + (ok ? 'ok' : 'ng');
+      const ex = h('div', { class: 'ex' }, h('b', null, (ok ? '正解！ ' : '正解は ' + MK[q.a] + '。 ')), q.ex);
+      const again = h('button', { type: 'button', class: 'btn', style: 'margin-top:8px' }, 'もう一度解く');
+      again.addEventListener('click', () => { answered = false; bs.forEach(x => x.classList.remove('sel', 'right', 'wrong')); ex.remove(); again.remove(); });
+      box.append(ex, again);
+    });
+    chs.append(b); return b;
+  });
+  return box;
+}
+
+// ===== ページ：問題演習 =====
+const F = { u: 'all', lv: 0, st: 'all', order: null };
+function pDrill(app) {
+  app.append(h('div', { class: 'uh' }, h('span', { class: 'no' }, 'DRILL'), h('h1', null, '問題演習')),
+    say('すべてこの教材のオリジナル問題じゃ。まちがえた問題だけを集めて、解き直しもできるぞ。'));
+  const fl = h('div', { class: 'filters' }); app.append(fl);
+  const list = h('div', { class: 'qlist' }), cnt = h('p', { class: 'count' });
+  function row(label, items, key) {
+    const r = h('div', { class: 'row' }, h('span', null, label));
+    items.forEach(([v, t]) => { const c = h('button', { type: 'button', class: 'chip' + (F[key] === v ? ' on' : '') }, t);
+      c.addEventListener('click', () => { F[key] = v; r.querySelectorAll('.chip').forEach(x => x.classList.remove('on')); c.classList.add('on'); draw(); }); r.append(c); });
+    fl.append(r);
+  }
+  row('単元', [['all', 'すべて'], ...UNITS.map(u => [u.id, u.no + ' ' + u.title])], 'u');
+  row('難易度', [[0, 'すべて'], [1, '★'], [2, '★★'], [3, '★★★']], 'lv');
+  row('状態', [['all', 'すべて'], ['new', '未回答'], ['ng', 'まちがえた'], ['ok', '正解ずみ']], 'st');
+  const r4 = h('div', { class: 'row' }, h('span', null, '並び'));
+  btn(r4, 'シャッフル', () => { F.order = QS.map(q => [q.id, Math.random()]).reduce((m, [k, v]) => (m[k] = v, m), {}); draw(); });
+  btn(r4, '単元順', () => { F.order = null; draw(); });
+  fl.append(r4);
+  app.append(cnt, list);
+  function draw() {
+    let qs = QS.filter(q => (F.u === 'all' || q.u === F.u) && (!F.lv || q.lv === F.lv) && (F.st === 'all' || (F.st === 'new' && !S.qs[q.id]) || (F.st === 'ng' && S.qs[q.id] && !S.qs[q.id].ok) || (F.st === 'ok' && S.qs[q.id] && S.qs[q.id].ok)));
+    if (F.order) qs = qs.slice().sort((a, b) => F.order[a.id] - F.order[b.id]);
+    cnt.textContent = qs.length + '問';
+    list.innerHTML = ''; qs.forEach((q, i) => list.append(qCard(q, i + 1)));
+    if (!qs.length) list.append(say(F.st === 'ng' ? 'まちがえた問題はないぞ。見事じゃ！' : 'この条件に合う問題はないようじゃ。しぼりこみを変えてみよう。'));
+  }
+  draw();
+}
+
+// ===== ページ：公式カード =====
+function pCards(app) {
+  app.append(h('div', { class: 'uh' }, h('span', { class: 'no' }, 'CARDS'), h('h1', null, '公式カード')),
+    say('表に名前、裏に式が書いてある。式を思い出してからタップしてめくるのじゃ。'));
+  let part = 'all', allFlip = false;
+  const r = h('div', { class: 'btns', style: 'margin-bottom:12px' });
+  const grid = h('div', { class: 'cards' });
+  seg(r, [['all', 'すべて'], ['motion', '力と運動'], ['wave', '波']], 'all', v => { part = v; draw(); });
+  btn(r, '全部めくる／もどす', () => { allFlip = !allFlip; grid.querySelectorAll('.fc').forEach(c => c.classList.toggle('flip', allFlip)); });
+  app.append(r, grid);
+  function draw() {
+    grid.innerHTML = '';
+    CARDS.filter(c => part === 'all' || c[0] === part).forEach(([p, name, f, d]) => {
+      const c = h('button', { type: 'button', class: 'fc' + (allFlip ? ' flip' : ''), 'aria-label': name + 'の公式カード' },
+        h('div', { class: 'in' }, h('div', { class: 'fa' }, h('small', null, PARTS[p].name), h('b', null, name), h('small', null, 'タップで式を見る')),
+          h('div', { class: 'fb' }, h('small', null, name), h('span', { class: 'f' }, f), h('p', null, d))));
+      c.addEventListener('click', () => c.classList.toggle('flip')); grid.append(c);
+    });
+  }
+  draw();
+}
+
+// ===== ページ：用語集 =====
+function gyou(ch) {
+  const rows = [['あ', 'あいうえおぁぃぅぇぉ'], ['か', 'かきくけこがぎぐげご'], ['さ', 'さしすせそざじずぜぞ'], ['た', 'たちつてとだぢづでどっ'], ['な', 'なにぬねの'], ['は', 'はひふへほばびぶべぼぱぴぷぺぽ'], ['ま', 'まみむめも'], ['や', 'やゆよゃゅょ'], ['ら', 'らりるれろ'], ['わ', 'わをん']];
+  for (const [k, s] of rows) if (s.includes(ch)) return k; return 'その他';
+}
+function pGloss(app) {
+  app.append(h('div', { class: 'uh' }, h('span', { class: 'no' }, 'WORDS'), h('h1', null, '用語集')));
+  const inp = h('input', { type: 'search', id: 'gsearch', class: 'gsearch', placeholder: '用語や読みで検索（例：まさつ、波長）', 'aria-label': '用語を検索' });
+  const out = h('div', { class: 'gl' }); app.append(inp, out);
+  const sorted = GLOSS.slice().sort((a, b) => a[1].localeCompare(b[1], 'ja'));
+  function draw() {
+    const k = inp.value.trim(); out.innerHTML = '';
+    const items = sorted.filter(g => !k || g[0].includes(k) || g[1].includes(k) || g[2].includes(k));
+    if (!items.length) { out.append(say('その言葉は見つからなかった。ひらがなの読みでも探してみよう。')); return; }
+    const groups = {}; items.forEach(g => (groups[gyou(g[1][0])] = groups[gyou(g[1][0])] || []).push(g));
+    Object.keys(groups).forEach(gk => {
+      out.append(h('div', { class: 'gl-k' }, gk + '行'));
+      const dl = h('dl'); groups[gk].forEach(([t, y, d, u]) => { const U = UNITS.find(x => x.id === u);
+        dl.append(h('dt', null, t, h('small', null, y)), h('dd', null, d, ' ', U ? h('a', { href: '#' + u, 'data-go': u }, '→ UNIT ' + U.no) : null)); });
+      out.append(dl);
+    });
+  }
+  inp.addEventListener('input', draw); draw();
+}
+
+// ===== ページ：使い方 =====
+function pGuide(app) {
+  app.append(h('div', { class: 'uh' }, h('span', { class: 'no' }, 'GUIDE'), h('h1', null, '使い方ガイド')));
+  const g = h('div', { class: 'guide', html: `
+    <h3>このサイトについて</h3>
+    <p>物理基礎の「力と運動」と「波」を、自分の手で動かしながら学ぶ自習用サイトです。8つの単元に、あわせて${LAB_IDS.length}個の実験（シミュレーション）と${QS.length}問の確認問題があります。</p>
+    <h3>おすすめの進め方</h3>
+    <ol><li><b>要点</b>を読んで、出てくる式と言葉を確認する。</li><li><b>実験</b>で、スライダーやドラッグを使って動かしてみる。「やってみよう」に書いてある課題に取り組む。</li><li>気づいたことを<b>ハコ博士の解説</b>で確かめる。</li><li><b>確認問題</b>を解く。まちがえたら実験にもどって確かめる。</li><li>最後に<b>問題演習</b>で「まちがえた」だけを集めて解き直す。</li></ol>
+    <h3>実験の操作</h3>
+    <ul><li><b>●（丸）</b>がついている所はドラッグ（スマホは指でなぞる）できます。</li><li>スライダーで値を変えると、グラフや矢印がすぐに変わります。</li><li>UNIT 8 の実験は<b>音が出ます</b>。端末の音量を確認し、教室ではイヤホンを使いましょう。</li><li>重力加速度は 9.8 m/s²、空気抵抗はないものとして計算しています（気柱の開口端補正も考えていません）。</li></ul>
+    <h3>達成率とランク</h3>
+    <p>実験を1回でも操作すると「体験ずみ」、確認問題に1回でも正解すると「正解ずみ」になり、達成率が上がります。ランクは ${RANKS.map(r => r[1] + '（' + r[0] + '%）').join(' → ')} と上がっていきます。</p>
+    <h3>学習の記録について</h3>
+    <p>記録はこの端末のブラウザにだけ保存され、先生や他の人には送られません。別の端末やブラウザでは記録は引きつがれません。シークレットモードでは、閉じると記録が消えます。</p>
+    <h3>動作環境</h3>
+    <p>Chrome・Edge・Safari の新しいバージョンで動きます。ファイルで配られた場合は、パソコンに保存してからブラウザで開いてください。</p>` });
+  app.append(g);
+  const rs = h('div', { class: 'btns', style: 'margin-top:14px' });
+  btn(rs, '学習の記録をリセットする', () => {
+    const m = h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' }, h('div', { class: 'box' },
+      h('b', null, '学習の記録をすべて消しますか？'), h('p', { style: 'margin:0;font-size:14px' }, '体験ずみの実験と、問題の正解記録が消えます。元にはもどせません。'),
+      h('div', { class: 'btns' }, h('button', { type: 'button', class: 'btn pri', onclick: () => { S = { labs: {}, qs: {} }; save(); m.remove(); lastRank = null; render(); toast('記録をリセットしました'); } }, '消す'),
+        h('button', { type: 'button', class: 'btn', onclick: () => m.remove() }, 'やめる'))));
+    document.body.append(m);
+  });
+  g.append(rs);
+}
+
+// ===== 起動 =====
+try { go((location.hash || '').slice(1) || 'home', false); }
+catch (e) { $('#app').innerHTML = '<div class="loading"><b>エラーが起きました。</b><br>' + e.message + '</div>'; console.error(e); }
+
+</script>
+</body>
+</html>
